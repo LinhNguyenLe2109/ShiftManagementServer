@@ -1,8 +1,9 @@
+const dotenv = require("dotenv").config();
 const express = require("express");
 const app = express();
 const pino = require("pino-http")();
-const logger = require("./logger");
-var cors = require('cors')
+const logger = require("../logger");
+var cors = require("cors");
 
 app.use(pino);
 app.use(cors());
