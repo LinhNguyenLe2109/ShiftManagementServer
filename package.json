@@ -13,7 +13,7 @@
     "test:unit": "jest --testPathPattern='\/test\/unit'",
     "test:integration": "jest --testPathPattern='\/test\/integration'",
     "coverage": "jest --coverage",
-    "start": "node server.js"
+    "start": "node src/server.js"
   },
   "author": "",
   "license": "ISC",
