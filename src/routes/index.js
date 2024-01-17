@@ -3,7 +3,6 @@ const { createSuccessResponse } = require("../response.js");
 const { authenticate } = require("../auth");
 const router = express.Router();
 router.use(`/api`, authenticate(), require("./api"));
-router.use(`/login`, require("./login"));
 router.get("/", (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.status(200).json(

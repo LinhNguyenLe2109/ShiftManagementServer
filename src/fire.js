@@ -1,4 +1,4 @@
-const { initializeApp } = require ("firebase/app");
+const { initializeApp } = require ("firebase-admin/app");
 if (!(process.env.appId && process.env.messagingSenderId && process.env.apiKey)) {
   throw new Error("missing expected env vars: appId, messagingSenderId, apiKey");
 } 
