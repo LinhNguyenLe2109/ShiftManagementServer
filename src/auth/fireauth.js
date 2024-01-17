@@ -1,6 +1,7 @@
 const authorize = require("./auth-middleware");
 const BearerStrategy = require("passport-http-bearer").Strategy;
 const fire = require("../fire.js");
+const logger = require("../logger");
 const { getAuth, signInWithCustomToken } = require("firebase/auth");
 
 const auth = getAuth();

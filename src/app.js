@@ -11,6 +11,7 @@ var cors = require("cors");
 app.use(pino);
 app.use(helmet());
 app.use(cors());
+app.use(express.json());
 passport.use(authenticate.strategy());
 app.use(passport.initialize());
 
