@@ -6,6 +6,8 @@
     "firebase": "^10.7.1",
     "firebase-admin": "^12.0.0",
     "helmet": "^7.1.0",
+    "http-auth": "^4.2.0",
+    "http-auth-passport": "^1.0.7",
     "passport": "^0.7.0",
     "passport-http-bearer": "^1.0.1",
     "pino": "^8.17.2",
