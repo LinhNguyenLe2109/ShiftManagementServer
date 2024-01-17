@@ -8,6 +8,6 @@ const firebaseConfig = {
   projectId: "shiftmanagementserver",
   storageBucket: "shiftmanagementserver.appspot.com",
   messagingSenderId: process.env.messagingSenderId,
-  appId: process.env.apiKey
+  appId: process.env.appId
 };
 const firebaseApp = initializeApp(firebaseConfig);
