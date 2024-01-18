@@ -24,10 +24,6 @@ process.on("unhandledRejection", (reason, promise) => {
   throw reason;
 });
 
-app.get("/", (req, res) => {
-  req.log.info("something");
-  res.send("Hello World!");
-});
 app.use("/", require("./routes"));
 
 module.exports = app;
