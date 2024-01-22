@@ -1,6 +1,6 @@
 //server.js
 const app = require("./app");
-const logger = require("../logger");
+const logger = require("./logger");
 const port = 3000;
 
 app.listen(port, () => {

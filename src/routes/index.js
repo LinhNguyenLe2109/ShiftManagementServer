@@ -1,15 +1,15 @@
 const express = require("express");
 const { collection, getDocs } = require("firebase/firestore");
 const { db } = require("../database/firebase.config");
-const logger = require("../../logger");
+const logger = require("../logger");
 
 const router = express.Router();
-// router.post("/login", require("./login"));
+router.use("/user", require("./api/user"));
+// router.use("/test", require("./api/test"));
 
 //health check
 router.get("/", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
-  req.log.info("something");
   const citiesCol = collection(db, "users");
   const citySnapshot = await getDocs(citiesCol);
   const cityList = citySnapshot.docs.map((doc) => doc.data());
