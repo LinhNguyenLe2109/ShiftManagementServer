@@ -3,15 +3,11 @@ const express = require("express");
 const app = express();
 const pino = require("pino-http")();
 const logger = require("../logger");
+const { db } = require("./database/firebase.config");
 var cors = require("cors");
 
 app.use(pino);
 app.use(cors());
 
-logger.info("hi");
-app.get("/", (req, res) => {
-  req.log.info("something");
-  res.send("Hello World!");
-});
-
+app.use("/", require("./routes"));
 module.exports = app;
