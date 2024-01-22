@@ -1,7 +1,7 @@
 const logger = require("../../../logger");
 const { signup } = require("../../../database/authentication");
 
-const authenticateUser = async (req, res) => {
+const createNewUser = async (req, res) => {
   try {
     logger.info("authenticateUser: register");
     const email = req.body.email;
@@ -9,7 +9,8 @@ const authenticateUser = async (req, res) => {
 
     const user = await signup(email, password);
     if (user) {
-      res.status(200).send(user);
+      const idToken = await getIdToken(user);
+      res.status(200).json({ token: idToken });
     } else {
       res.status(401).send("Invalid credentials");
     }
@@ -18,4 +19,4 @@ const authenticateUser = async (req, res) => {
   }
 };
 
-module.exports = authenticateUser;
+module.exports = createNewUser;
