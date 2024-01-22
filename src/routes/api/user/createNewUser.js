@@ -6,8 +6,6 @@ const authenticateUser = async (req, res) => {
     logger.info("authenticateUser: register");
     const email = req.body.email;
     const password = req.body.password;
-    logger.info("email: " + email);
-    logger.info("Password: " + password);
 
     const user = await signup(email, password);
     if (user) {

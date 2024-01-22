@@ -14,6 +14,8 @@ const auth = getAuth(app);
 // @return userInformation - object
 const signup = async (email, password) => {
   try {
+    logger.info("email: " + email);
+    logger.info("Password: " + password);
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
