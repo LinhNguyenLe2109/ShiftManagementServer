@@ -9,12 +9,8 @@ router.use("/user", require("./api/user"));
 router.use("/test", authenticateJWT, require("./api/test"));
 
 //health check
-router.get("/", async (req, res) => {
+router.get("/", (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
-  const citiesCol = collection(db, "users");
-  const citySnapshot = await getDocs(citiesCol);
-  const cityList = citySnapshot.docs.map((doc) => doc.data());
-  logger.info(cityList);
-  await res.json(cityList);
+  res.json("Hello World!");
 });
 module.exports = router;
