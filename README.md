@@ -12,6 +12,15 @@ This is used for working with firebase database. Each file is a list of function
 
 Used to define the routes of the server.
 
+#### API
+
+##### user folder
+
+- Route: **/user**
+- Route: **/**, Method: **GET**: return user information after authentication
+- Route: **/login**, Method: **POST**, Body: {email:string, password: string}: login user, return user token
+- Route: **/register**, Method: **POST**, Body: {email:string, password: string}: register user, return user token, user must sign in again after registration for security reason
+
 ## Note
 
 ### Firebase
