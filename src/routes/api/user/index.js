@@ -12,4 +12,7 @@ router.post("/login", require("./authenticateUser"));
 
 // POST /user/register
 router.post("/register", require("./createNewUser"));
+
+// PUT /user
+router.put("/", authenticateJWT, require("./updateUser"));
 module.exports = router;

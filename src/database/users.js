@@ -25,8 +25,10 @@ class User {
     this.lastName = lastName ? lastName : "";
     this.firstName = firstName ? firstName : "";
     this.createdOn = createdOn ? createdOn : new Date();
-    this.active = active ? active : true;
-    this.type = type ? this.type : 0;
+    // -1 is undefined, 0 is false, 1 is true
+    this.active = active ? active : -1;
+    // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
+    this.type = type ? this.type : -1;
     this.reportTo = reportTo ? reportTo : "";
     this.employeeList = employeeList ? employeeList : [];
   }
@@ -134,15 +136,33 @@ const getUpperManager = async (userId) => {
 
 // Update a user profile
 const updateUser = async (userId, user) => {
-  const userObj = new User(user);
+  let userUpdatedData = new User(userId, ...user);
   try {
     const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       logger.info(`User data: ${docSnap.data()}`);
+      const userDataFromDb = new User(userId, ...docSnap.data());
+      // Update only the fields that are passed in the request
+      if (userUpdatedData.lastName === "") {
+        userUpdatedData.lastName = userDataFromDb.lastName;
+      }
+      if (userUpdatedData.firstName === "") {
+        userUpdatedData.firstName = userDataFromDb.firstName;
+      }
+      if (userUpdatedData.type === -1) {
+        userUpdatedData.type = userDataFromDb.type;
+      }
+      if (userUpdatedData.active === -1) {
+        userUpdatedData.active = userDataFromDb.active;
+      }
+      userUpdatedData.reportTo = userDataFromDb.reportTo;
+      userUpdatedData.employeeList = userDataFromDb.employeeList;
+      userUpdatedData.createdOn = userDataFromDb.createdOn;
+      userUpdatedData.email = userDataFromDb.email;
       const docRef = await setDoc(
-        doc(db, "users", userObj.getId),
-        userObj.getDataForDB(),
+        doc(db, "users", userUpdatedData.getId),
+        userUpdatedData.getDataForDB(),
         { merge: true }
       );
       logger.info(`User updated successfully: ${docRef}`);

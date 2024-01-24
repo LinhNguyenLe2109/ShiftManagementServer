@@ -16,10 +16,11 @@ Used to define the routes of the server.
 
 ##### user folder
 
-- Route: **/user**
+- Prior Route: **/user**
 - Route: **/**, Method: **GET**: return user information after authentication
 - Route: **/login**, Method: **POST**, Body: {email:string, password: string}: login user, return user token
 - Route: **/register**, Method: **POST**, Body: {email:string, password: string}: register user, return user token, user must sign in again after registration for security reason
+- Route: **/**, Method: **PUT**, Body: {firstName?:string, lastName?:string, active?: number, type?: number}: update user information
 
 ## Note
 
