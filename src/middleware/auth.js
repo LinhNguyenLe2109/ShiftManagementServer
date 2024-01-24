@@ -11,6 +11,7 @@ const authenticateJWT = async (req, res, next) => {
       .auth()
       .verifyIdToken(idToken)
       .then(function (decodedToken) {
+        res.locals.userDecodedToken = decodedToken;
         return next();
       })
       .catch(function (error) {

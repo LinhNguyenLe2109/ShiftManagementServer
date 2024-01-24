@@ -14,15 +14,14 @@ const auth = getAuth(app);
 // @return userInformation - object
 const signup = async (email, password) => {
   try {
-    logger.info("email: " + email);
-    logger.info("Password: " + password);
+    // logger.info("email: " + email);
+    // logger.info("Password: " + password);
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
       password
     );
     const user = userCredential.user;
-    logger.info(user.toString());
     return user;
   } catch (error) {
     const errorCode = error.code;

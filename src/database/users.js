@@ -26,7 +26,7 @@ class User {
     this.firstName = firstName ? firstName : "";
     this.createdOn = createdOn ? createdOn : new Date();
     this.active = active ? active : true;
-    this.type = type;
+    this.type = type ? this.type : 0;
     this.reportTo = reportTo ? reportTo : "";
     this.employeeList = employeeList ? employeeList : [];
   }
@@ -51,9 +51,11 @@ class User {
 // Create a new user profile
 const createUser = async (user) => {
   const userObj = new User(user);
+  logger.info(userObj);
   try {
+    const userId = userObj.getId();
     const docRef = await setDoc(
-      doc(db, "users", userObj.getId),
+      doc(db, "users", userId),
       userObj.getDataForDB()
     );
     logger.info(`User created successfully: ${docRef}`);
@@ -65,12 +67,14 @@ const createUser = async (user) => {
 };
 
 // Get a user profile
-const getUser = async (userId) => {
+const getUserInfo = async (userId) => {
+  logger.info("getUserInfo called");
   try {
+    logger.debug("User id:" + userId);
     const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(`User data: ${docSnap.data()}`);
+      logger.info(docSnap.data());
       return docSnap.data();
     } else {
       logger.error("No such document!");
@@ -169,7 +173,7 @@ const deleteUser = async (userId) => {
 module.exports = {
   getUpperManager,
   getUsersByManager,
-  getUser,
+  getUserInfo,
   createUser,
   updateUser,
   deleteUser,

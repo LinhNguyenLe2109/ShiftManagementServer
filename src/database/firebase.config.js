@@ -1,7 +1,6 @@
 const { initializeApp } = require("firebase/app");
 const { getFirestore } = require("firebase/firestore");
 var admin = require("firebase-admin");
-var serviceAccount = require("./shiftmanagementserver-firebase-adminsdk-6iijj-6560ad3c90.json");
 const firebaseConfig = {
   apiKey: process.env.FIRESTORE_API_KEY,
   authDomain: process.env.FIRESTORE_AUTH_DOMAIN,
