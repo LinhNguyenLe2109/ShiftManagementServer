@@ -1,12 +1,12 @@
 const logger = require("../../../logger");
-const { updateUser } = require("../../../database/users");
+const { updateUserInfo } = require("../../../database/users");
 
 const updateUser = async (req, res) => {
   try {
     logger.info("updateUser called");
     const userDecodedToken = res.locals.userDecodedToken;
     const userId = userDecodedToken.user_id;
-    const userInfo = await updateUser(userId, req.body);
+    const userInfo = await updateUserInfo(userId, req.body);
     // logger.debug(userDecodedToken);
     return res.status(200).json(userInfo);
   } catch (e) {

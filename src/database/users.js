@@ -135,7 +135,7 @@ const getUpperManager = async (userId) => {
 };
 
 // Update a user profile
-const updateUser = async (userId, user) => {
+const updateUserInfo = async (userId, user) => {
   let userUpdatedData = new User(userId, ...user);
   try {
     const docRef = doc(db, "users", userId);
@@ -195,6 +195,6 @@ module.exports = {
   getUsersByManager,
   getUserInfo,
   createUser,
-  updateUser,
+  updateUserInfo,
   deleteUser,
 };
