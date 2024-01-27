@@ -16,7 +16,7 @@ class User {
     firstName,
     createdOn,
     active,
-    type,
+    accessLevel,
     reportTo,
     employeeList,
   }) {
@@ -28,7 +28,7 @@ class User {
     // -1 is undefined, 0 is false, 1 is true
     this.active = active ? active : -1;
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
-    this.type = type ? this.type : -1;
+    this.accessLevel = accessLevel ? accessLevel : -1;
     this.reportTo = reportTo ? reportTo : "";
     this.employeeList = employeeList ? employeeList : [];
   }
@@ -43,7 +43,7 @@ class User {
       firstName: this.firstName,
       createdOn: this.createdOn,
       active: this.active,
-      type: this.type,
+      accessLevel: this.accessLevel,
       reportTo: this.reportTo,
       employeeList: this.employeeList,
     };
@@ -150,8 +150,8 @@ const updateUserInfo = async (userId, user) => {
       if (userUpdatedData.firstName === "") {
         userUpdatedData.firstName = userDataFromDb.firstName;
       }
-      if (userUpdatedData.type === -1) {
-        userUpdatedData.type = userDataFromDb.type;
+      if (userUpdatedData.accessLevel === -1) {
+        userUpdatedData.accessLevel = userDataFromDb.accessLevel;
       }
       if (userUpdatedData.active === -1) {
         userUpdatedData.active = userDataFromDb.active;
@@ -197,4 +197,5 @@ module.exports = {
   createUser,
   updateUserInfo,
   deleteUser,
+  User,
 };

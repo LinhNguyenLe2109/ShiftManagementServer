@@ -1,19 +1,34 @@
 const logger = require("../../../logger");
 const { signup } = require("../../../database/authentication");
-const { createUser } = require("../../../database/users");
+const { createUser, User } = require("../../../database/users");
 const { getIdToken } = require("firebase/auth");
 
 const createNewUser = async (req, res) => {
   try {
     logger.info("authenticateUser: register");
+    // Extract info from request
     const email = req.body.email;
     const password = req.body.password;
+    const firstName = req.body.firstName ? req.body.firstName : "";
+    const lastName = req.body.lastName ? req.body.lastName : "";
+    const accessLevel = req.body.accessLevel ? req.body.accessLevel : 0;
+    const reportTo = req.body.reportTo ? req.body.reportTo : "";
+    const active = req.body.active ? req.body.active : 0;
 
     const user = await signup(email, password);
     if (user) {
       const idToken = await getIdToken(user);
-      logger.debug(user);
-      await createUser({ id: user.uid, email: user.email });
+      userObj = new User({
+        id: user.uid,
+        email: user.email,
+        firstName,
+        lastName,
+        accessLevel,
+        reportTo,
+        active,
+      });
+      logger.debug(userObj);
+      await createUser(userObj);
       res.status(200).json({ token: idToken });
     } else {
       res.status(401).send("Invalid credentials");
