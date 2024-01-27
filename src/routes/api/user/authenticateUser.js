@@ -1,6 +1,8 @@
 const logger = require("../../../logger");
 const { signin } = require("../../../database/authentication");
 const { getIdToken } = require("firebase/auth");
+const { getUserInfo } = require("../../../database/users");
+const getUser = require("./getUser");
 
 const authenticateUser = async (req, res) => {
   try {
@@ -13,7 +15,10 @@ const authenticateUser = async (req, res) => {
     const user = await signin(email, password);
     if (user) {
       const idToken = await getIdToken(user);
-      res.status(200).json({ token: idToken });
+      const userId = user.uid;
+      const userInfo = await getUserInfo(userId);
+      const userAccessLevel = userInfo.type;
+      res.status(200).json({ token: idToken, accessLevel: userAccessLevel });
     } else {
       res.status(401).send("Invalid credentials");
     }
