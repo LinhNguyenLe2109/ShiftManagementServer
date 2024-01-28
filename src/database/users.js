@@ -136,13 +136,17 @@ const getUpperManager = async (userId) => {
 
 // Update a user profile
 const updateUserInfo = async (userId, user) => {
-  let userUpdatedData = new User(userId, ...user);
+  logger.info("updateUserInfo called");
+  let userUpdatedData = user;
+  userUpdatedData.id = userId;
+  // logger.info(userUpdatedData);
+  // logger.info(userId);
   try {
     const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(`User data: ${docSnap.data()}`);
-      const userDataFromDb = new User(userId, ...docSnap.data());
+      // logger.info(docSnap.data());
+      const userDataFromDb = docSnap.data();
       // Update only the fields that are passed in the request
       if (userUpdatedData.lastName === "") {
         userUpdatedData.lastName = userDataFromDb.lastName;
@@ -160,13 +164,15 @@ const updateUserInfo = async (userId, user) => {
       userUpdatedData.employeeList = userDataFromDb.employeeList;
       userUpdatedData.createdOn = userDataFromDb.createdOn;
       userUpdatedData.email = userDataFromDb.email;
+      logger.info(userUpdatedData.getDataForDB());
       const docRef = await setDoc(
-        doc(db, "users", userUpdatedData.getId),
+        doc(db, "users", userUpdatedData.getId()),
         userUpdatedData.getDataForDB(),
         { merge: true }
       );
-      logger.info(`User updated successfully: ${docRef}`);
-      return docRef;
+      logger.info(`User updated successfully`);
+      const updatedUser = await getUserInfo(userId);
+      return updatedUser;
     } else {
       logger.error("No such document!");
       return null;

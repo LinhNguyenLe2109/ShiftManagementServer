@@ -11,7 +11,7 @@ const createNewUser = async (req, res) => {
     const password = req.body.password;
     const firstName = req.body.firstName ? req.body.firstName : "";
     const lastName = req.body.lastName ? req.body.lastName : "";
-    const accessLevel = req.body.accessLevel ? req.body.accessLevel : 0;
+    const accessLevel = req.body.accessLevel ? Number(req.body.accessLevel) : 0;
     const reportTo = req.body.reportTo ? req.body.reportTo : "";
     const active = req.body.active ? req.body.active : 0;
 
