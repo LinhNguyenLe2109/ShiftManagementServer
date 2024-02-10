@@ -24,6 +24,8 @@ Used to define the routes of the server.
 
 ## Note
 
+- To generate a new document id, use uuidv4() from the uuid package
+
 ### Firebase
 
 #### Authentication

@@ -140,7 +140,7 @@ const deleteAllCategoriesForManager = async (managerId) => {
     logger.info("calling deleteAllCategoriesForManager");
     const categories = await getAllCategoriesForManager(managerId);
     if (categories === null) {
-      return;
+      return false;
     }
     logger.info(`Categories data:`);
     logger.info(categories);
@@ -150,6 +150,7 @@ const deleteAllCategoriesForManager = async (managerId) => {
       await deleteCategory(category.id);
     }
     // logger.info(`All Categories deleted for Manager with ID: ${managerId}`);
+    return true;
   } catch (e) {
     logger.error(`Error deleting all categories for manager: ${e}`);
     throw e;
