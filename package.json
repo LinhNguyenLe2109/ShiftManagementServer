@@ -8,14 +8,15 @@
     "firebase-admin": "^12.0.0",
     "nodemon": "^3.0.3",
     "pino": "^8.17.2",
-    "pino-http": "^9.0.0"
+    "pino-http": "^9.0.0",
+    "uuid": "^9.0.1"
   },
   "name": "shiftmanagementserver",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test:unit": "jest --testPathPattern='/test/unit'",
-    "test:integration": "jest --testPathPattern='/test/integration'",
+    "test:unit": "jest --testPathPattern='/test/unit' --detectOpenHandles",
+    "test:integration": "jest --testPathPattern='/test/integration' --detectOpenHandles",
     "coverage": "jest --coverage",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"

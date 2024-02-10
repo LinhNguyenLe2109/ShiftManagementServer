@@ -5,6 +5,7 @@ const {
   getDoc,
   getDocs,
   collection,
+  deleteDoc,
 } = require("firebase/firestore");
 const logger = require("../logger");
 
