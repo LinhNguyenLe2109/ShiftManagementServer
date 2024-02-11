@@ -10,6 +10,7 @@ const {
 const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { removeUserFromAuthDb } = require("../database/authentication");
+const { v4: uuidv4 } = require("uuid");
 
 class User {
   constructor({
@@ -33,7 +34,7 @@ class User {
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
     this.accessLevel =
       accessLevel && typeof accessLevel == "number" ? accessLevel : -1;
-    this.accountInfo = verifyString(accountInfo) ? accountInfo : "";
+    this.accountInfo = verifyString(accountInfo) ? accountInfo : uuidv4();
     this.notificationList = Array.isArray(notificationList)
       ? notificationList
       : [];
@@ -57,11 +58,16 @@ class User {
 }
 
 // Create a new user profile
+// @param user: User class
+// @return boolean
 const createUser = async (user) => {
   const userObj = new User(user);
   logger.info(userObj);
   try {
     const userId = userObj.getId();
+    if (await getUserInfo(userId)) {
+      return false;
+    }
     const docRef = await setDoc(
       doc(db, "users", userId),
       userObj.getDataForDB()
@@ -75,6 +81,8 @@ const createUser = async (user) => {
 };
 
 // Get a user profile
+// @param userId: string
+// @return user: User class
 const getUserInfo = async (userId) => {
   logger.info("getUserInfo called");
   try {
@@ -85,6 +93,7 @@ const getUserInfo = async (userId) => {
       logger.info(docSnap.data());
       const id = docSnap.id;
       const data = docSnap.data();
+      data.createdOn = data.createdOn.toDate();
       return { id, ...data };
     } else {
       logger.error("No such document!");
@@ -97,6 +106,7 @@ const getUserInfo = async (userId) => {
 };
 
 // Update a user profile
+// This is not used for updating the user's account info, email, notification list, or createdOn
 // @param userId: string
 // @param user: User class
 // @return user: User class
@@ -125,10 +135,10 @@ const updateUserInfo = async (userId, user) => {
       if (userUpdatedData.active === -1) {
         userUpdatedData.active = userDataFromDb.active;
       }
-      userUpdatedData.reportTo = userDataFromDb.reportTo;
-      userUpdatedData.employeeList = userDataFromDb.employeeList;
       userUpdatedData.createdOn = userDataFromDb.createdOn;
       userUpdatedData.email = userDataFromDb.email;
+      userUpdatedData.accountInfo = userDataFromDb.accountInfo;
+      userUpdatedData.notificationList = userDataFromDb.notificationList;
       logger.info(userUpdatedData.getDataForDB());
       const docRef = await setDoc(
         doc(db, "users", userUpdatedData.getId()),
@@ -154,12 +164,13 @@ const deleteUser = async (userId) => {
     // remove user document in the collection
     const docRef = doc(db, "users", userId);
     await deleteDoc(docRef);
-    logger.info(`User deleted successfully: ${docRef}`);
+    logger.info(`User deleted successfully: ${userId}`);
     // remove user from auth db
     if (!(await removeUserFromAuthDb(userId))) {
       logger.error(`Error deleting user from auth db: ${userId}`);
       return false;
     }
+    logger.info(`User deleted from auth db: ${userId}`);
     return true;
   } catch (e) {
     logger.error(`Error deleting user: ${e}`);
@@ -168,8 +179,6 @@ const deleteUser = async (userId) => {
 };
 
 module.exports = {
-  getUpperManager,
-  getUsersByManager,
   getUserInfo,
   createUser,
   updateUserInfo,

@@ -4,13 +4,20 @@ const {
   createUser,
 } = require("../../../../src/database/users");
 
-const { signup } = require("../../../../src/database/authentication");
+const { signup, signin } = require("../../../../src/database/authentication");
 const { v4: uuidv4 } = require("uuid");
 
 describe("deleteUser", () => {
   let userId = "";
   beforeEach(async () => {
-    const data = await signup("test@gmail.com", "password");
+    let data = null;
+    try {
+      data = await signup("test@gmail.com", "password");
+    } catch (e) {
+      data = await signin("test@gmail.com", "password");
+      await deleteUser(data.uid);
+      data = await signup("test@gmail.com", "password");
+    }
     const user = new User({
       id: data.uid,
       email: data.email,

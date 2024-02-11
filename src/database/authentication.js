@@ -27,6 +27,7 @@ const signup = async (email, password) => {
     const errorCode = error.code;
     const errorMessage = error.message;
     logger.error(errorCode, errorMessage);
+    throw new Error({ errorCode, errorMessage });
   }
 };
 
@@ -48,6 +49,7 @@ const signin = async (email, password) => {
     const errorCode = error.code;
     const errorMessage = error.message;
     logger.error(errorCode, errorMessage);
+    throw new Error({ errorCode, errorMessage });
   }
 };
 

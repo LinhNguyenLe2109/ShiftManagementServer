@@ -6,14 +6,21 @@ const {
   getUserInfo,
 } = require("../../../../src/database/users");
 
-const { signup } = require("../../../../src/database/authentication");
+const { signup, signin } = require("../../../../src/database/authentication");
 const { v4: uuidv4 } = require("uuid");
 
 describe("updateUserInfo", () => {
   let userId = "";
   let user = null;
   beforeAll(async () => {
-    const data = await signup("test@gmail.com", "password");
+    let data = null;
+    try {
+      data = await signup("test@gmail.com", "password");
+    } catch (e) {
+      data = await signin("test@gmail.com", "password");
+      await deleteUser(data.uid);
+      data = await signup("test@gmail.com", "password");
+    }
     user = new User({
       id: data.uid,
       email: data.email,
@@ -33,7 +40,7 @@ describe("updateUserInfo", () => {
   });
 
   test("successful fetch user info return user object", async () => {
-    let updatedUser = { ...user };
+    let updatedUser = new User({ ...user });
     updatedUser.firstName = "Jane";
     await updateUserInfo(userId, updatedUser);
     const result = await getUserInfo(userId);
