@@ -11,7 +11,7 @@ const {
 } = require("firebase/firestore");
 const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
-const verifyString = require("../helper/verifyString");
+const verifyString = require("../utils/verifyString");
 
 // Only description is optional
 class Category {
@@ -128,10 +128,10 @@ const deleteCategory = async (categoryId) => {
     const docRef = doc(db, "categories", categoryId);
     await deleteDoc(docRef);
     logger.info(`Category deleted with ID: ${categoryId}`);
-    return docRef;
+    return true;
   } catch (e) {
     logger.error(`Error deleting category: ${e}`);
-    throw e;
+    return false;
   }
 };
 

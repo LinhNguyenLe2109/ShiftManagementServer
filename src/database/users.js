@@ -8,6 +8,8 @@ const {
   deleteDoc,
 } = require("firebase/firestore");
 const logger = require("../logger");
+const verifyString = require("../utils/verifyString");
+const { removeUserFromAuthDb } = require("../database/authentication");
 
 class User {
   constructor({
@@ -18,20 +20,23 @@ class User {
     createdOn,
     active,
     accessLevel,
-    reportTo,
-    employeeList,
+    accountInfo,
+    notificationList,
   }) {
     this.id = id;
     this.email = email;
-    this.lastName = lastName ? lastName : "";
-    this.firstName = firstName ? firstName : "";
+    this.lastName = verifyString(lastName) ? lastName : "";
+    this.firstName = verifyString(firstName) ? firstName : "";
     this.createdOn = createdOn ? createdOn : new Date();
     // -1 is undefined, 0 is false, 1 is true
     this.active = active ? active : -1;
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
-    this.accessLevel = accessLevel ? accessLevel : -1;
-    this.reportTo = reportTo ? reportTo : "";
-    this.employeeList = employeeList ? employeeList : [];
+    this.accessLevel =
+      accessLevel && typeof accessLevel == "number" ? accessLevel : -1;
+    this.accountInfo = verifyString(accountInfo) ? accountInfo : "";
+    this.notificationList = Array.isArray(notificationList)
+      ? notificationList
+      : [];
   }
 
   getId() {
@@ -45,8 +50,8 @@ class User {
       createdOn: this.createdOn,
       active: this.active,
       accessLevel: this.accessLevel,
-      reportTo: this.reportTo,
-      employeeList: this.employeeList,
+      accountInfo: this.accountInfo,
+      notificationList: this.notificationList,
     };
   }
 }
@@ -62,10 +67,10 @@ const createUser = async (user) => {
       userObj.getDataForDB()
     );
     logger.info(`User created successfully: ${docRef}`);
-    return docRef;
+    return true;
   } catch (e) {
     logger.error(`Error creating user: ${e}`);
-    throw e;
+    return false;
   }
 };
 
@@ -78,53 +83,9 @@ const getUserInfo = async (userId) => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       logger.info(docSnap.data());
-      return docSnap.data();
-    } else {
-      logger.error("No such document!");
-      return null;
-    }
-  } catch (e) {
-    logger.error(`Error getting user: ${e}`);
-    throw e;
-  }
-};
-
-// Get all users under a manager
-const getUsersByManager = async (managerId) => {
-  try {
-    const usersRef = collection(db, "users");
-    const querySnapshot = await getDocs(usersRef);
-    const users = [];
-    querySnapshot.forEach((doc) => {
-      if (doc.data().reportTo === managerId) {
-        users.push(doc.data());
-      }
-    });
-    logger.info(`Users data: ${users}`);
-    return users;
-  } catch (e) {
-    logger.error(`Error getting users: ${e}`);
-    throw e;
-  }
-};
-
-// Get upper manager of a user
-const getUpperManager = async (userId) => {
-  try {
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      logger.info(`User data: ${docSnap.data()}`);
-      const managerId = docSnap.data().reportTo;
-      const managerRef = doc(db, "users", managerId);
-      const managerSnap = await getDoc(managerRef);
-      if (managerSnap.exists()) {
-        logger.info(`Manager data: ${managerSnap.data()}`);
-        return managerSnap.data();
-      } else {
-        logger.error("No such document!");
-        return null;
-      }
+      const id = docSnap.id;
+      const data = docSnap.data();
+      return { id, ...data };
     } else {
       logger.error("No such document!");
       return null;
@@ -136,6 +97,9 @@ const getUpperManager = async (userId) => {
 };
 
 // Update a user profile
+// @param userId: string
+// @param user: User class
+// @return user: User class
 const updateUserInfo = async (userId, user) => {
   logger.info("updateUserInfo called");
   let userUpdatedData = user;
@@ -187,13 +151,19 @@ const updateUserInfo = async (userId, user) => {
 // Delete a user profile
 const deleteUser = async (userId) => {
   try {
+    // remove user document in the collection
     const docRef = doc(db, "users", userId);
     await deleteDoc(docRef);
     logger.info(`User deleted successfully: ${docRef}`);
-    return docRef;
+    // remove user from auth db
+    if (!(await removeUserFromAuthDb(userId))) {
+      logger.error(`Error deleting user from auth db: ${userId}`);
+      return false;
+    }
+    return true;
   } catch (e) {
     logger.error(`Error deleting user: ${e}`);
-    throw e;
+    return false;
   }
 };
 

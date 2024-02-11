@@ -24,6 +24,7 @@ Used to define the routes of the server.
 
 ## Note
 
+- For access level, 0 is the lowest and 2 is the highest. 0 is for normal user, 1 is for manager, 2 is for admin.
 - To generate a new document id, use uuidv4() from the uuid package
 
 ### Firebase
