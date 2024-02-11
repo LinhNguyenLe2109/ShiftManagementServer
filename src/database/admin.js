@@ -48,7 +48,7 @@ class Admin {
   };
 }
 
-createAdmin = async (adminId) => {
+const createAdmin = async (adminId) => {
   const admin = new Admin({ id: adminId });
   try {
     await setDoc(doc(db, "admin", admin.id), admin);
@@ -59,7 +59,7 @@ createAdmin = async (adminId) => {
   }
 };
 
-getAdmin = async (adminId) => {
+const getAdmin = async (adminId) => {
   try {
     const docRef = doc(db, "admin", adminId);
     const docSnap = await getDoc(docRef);
@@ -84,7 +84,7 @@ getAdmin = async (adminId) => {
 // To remove multiple managers, use removeMultipleManagers key
 // @param adminId: string
 // @param updatedAdmin: object
-updateAdmin = async (adminId, updatedAdmin) => {
+const updateAdmin = async (adminId, updatedAdmin) => {
   const admin = await getAdmin(adminId);
   if (updatedAdmin.hasOwnProperty("addManager")) {
     admin.addManager(updatedAdmin.addManager);
@@ -101,7 +101,7 @@ updateAdmin = async (adminId, updatedAdmin) => {
   return admin;
 };
 
-deleteAdmin = async (adminId) => {
+const deleteAdmin = async (adminId) => {
   try {
     const admin = await getAdmin(adminId);
     if (admin == null) {

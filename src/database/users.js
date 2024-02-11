@@ -4,9 +4,9 @@ const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { removeUserFromAuthDb } = require("../database/authentication");
 const { v4: uuidv4 } = require("uuid");
-const { deleteAdmin } = require("../database/admin");
-const { deleteManager } = require("../database/manager");
-const { deleteEmployee } = require("../database/employee");
+const { deleteAdmin, createAdmin } = require("../database/admin");
+const { deleteManager, createManager } = require("../database/manager");
+const { deleteEmployee, createEmployee } = require("../database/employee");
 
 class User {
   constructor({
@@ -61,6 +61,11 @@ const createUser = async (user) => {
   logger.info(userObj);
   try {
     const userId = userObj.getId();
+    // return false if accessLevel is not defined
+    if (userObj.accessLevel == -1) {
+      return false;
+    }
+    // Check if user already exists
     if (await getUserInfo(userId)) {
       return false;
     }
@@ -68,7 +73,15 @@ const createUser = async (user) => {
       doc(db, "users", userId),
       userObj.getDataForDB()
     );
-    logger.info(`User created successfully: ${docRef}`);
+    if (userObj.accessLevel == 2) {
+      await createAdmin(userId);
+    }
+    if (userObj.accessLevel == 1) {
+      await createManager(userId);
+    }
+    if (userObj.accessLevel == 0) {
+      await createEmployee(userId);
+    }
     return true;
   } catch (e) {
     logger.error(`Error creating user: ${e}`);
