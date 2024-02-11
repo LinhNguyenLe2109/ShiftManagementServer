@@ -171,6 +171,7 @@ const deleteUser = async (userId) => {
       return false;
     }
     logger.info(`User deleted from auth db: ${userId}`);
+    //TODO: remove account info from other collections
     return true;
   } catch (e) {
     logger.error(`Error deleting user: ${e}`);
