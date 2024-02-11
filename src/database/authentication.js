@@ -3,7 +3,7 @@ const {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } = require("firebase/auth");
-const { app } = require("./firebase.config");
+const { app, admin } = require("./firebase.config");
 const logger = require("../logger");
 
 const auth = getAuth(app);
@@ -27,6 +27,7 @@ const signup = async (email, password) => {
     const errorCode = error.code;
     const errorMessage = error.message;
     logger.error(errorCode, errorMessage);
+    throw new Error({ errorCode, errorMessage });
   }
 };
 
@@ -48,7 +49,18 @@ const signin = async (email, password) => {
     const errorCode = error.code;
     const errorMessage = error.message;
     logger.error(errorCode, errorMessage);
+    throw new Error({ errorCode, errorMessage });
   }
 };
 
-module.exports = { signup, signin };
+const removeUserFromAuthDb = async (uid) => {
+  try {
+    await admin.auth().deleteUser(uid);
+    return true;
+  } catch (e) {
+    logger.error("Error deleting user from auth db: " + e);
+    return false;
+  }
+};
+
+module.exports = { signup, signin, removeUserFromAuthDb };

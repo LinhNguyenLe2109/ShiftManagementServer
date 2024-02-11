@@ -1,12 +1,20 @@
 const { db } = require("../database/firebase.config");
-const {
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  collection,
-} = require("firebase/firestore");
+const { doc, setDoc, getDoc, deleteDoc } = require("firebase/firestore");
 const logger = require("../logger");
+const verifyString = require("../utils/verifyString");
+const { removeUserFromAuthDb } = require("../database/authentication");
+const { v4: uuidv4 } = require("uuid");
+const { deleteAdmin, createAdmin, getAdmin } = require("../database/admin");
+const {
+  deleteManager,
+  createManager,
+  getManager,
+} = require("../database/manager");
+const {
+  deleteEmployee,
+  createEmployee,
+  getEmployee,
+} = require("../database/employee");
 
 class User {
   constructor({
@@ -17,20 +25,23 @@ class User {
     createdOn,
     active,
     accessLevel,
-    reportTo,
-    employeeList,
+    accountInfo,
+    notificationList,
   }) {
     this.id = id;
     this.email = email;
-    this.lastName = lastName ? lastName : "";
-    this.firstName = firstName ? firstName : "";
+    this.lastName = verifyString(lastName) ? lastName : "";
+    this.firstName = verifyString(firstName) ? firstName : "";
     this.createdOn = createdOn ? createdOn : new Date();
     // -1 is undefined, 0 is false, 1 is true
     this.active = active ? active : -1;
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
-    this.accessLevel = accessLevel ? accessLevel : -1;
-    this.reportTo = reportTo ? reportTo : "";
-    this.employeeList = employeeList ? employeeList : [];
+    this.accessLevel =
+      accessLevel && typeof accessLevel == "number" ? accessLevel : -1;
+    this.accountInfo = verifyString(accountInfo) ? accountInfo : uuidv4();
+    this.notificationList = Array.isArray(notificationList)
+      ? notificationList
+      : [];
   }
 
   getId() {
@@ -44,31 +55,51 @@ class User {
       createdOn: this.createdOn,
       active: this.active,
       accessLevel: this.accessLevel,
-      reportTo: this.reportTo,
-      employeeList: this.employeeList,
+      accountInfo: this.accountInfo,
+      notificationList: this.notificationList,
     };
   }
 }
 
 // Create a new user profile
+// @param user: User class
+// @return boolean
 const createUser = async (user) => {
   const userObj = new User(user);
   logger.info(userObj);
   try {
     const userId = userObj.getId();
+    // return false if accessLevel is not defined
+    if (userObj.accessLevel == -1) {
+      return false;
+    }
+    // Check if user already exists
+    if (await getUserInfo(userId)) {
+      return false;
+    }
     const docRef = await setDoc(
       doc(db, "users", userId),
       userObj.getDataForDB()
     );
-    logger.info(`User created successfully: ${docRef}`);
-    return docRef;
+    if (userObj.accessLevel == 2) {
+      await createAdmin(userId);
+    }
+    if (userObj.accessLevel == 1) {
+      await createManager(userId);
+    }
+    if (userObj.accessLevel == 0) {
+      await createEmployee(userId);
+    }
+    return true;
   } catch (e) {
     logger.error(`Error creating user: ${e}`);
-    throw e;
+    return false;
   }
 };
 
 // Get a user profile
+// @param userId: string
+// @return user: User class
 const getUserInfo = async (userId) => {
   logger.info("getUserInfo called");
   try {
@@ -77,53 +108,19 @@ const getUserInfo = async (userId) => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       logger.info(docSnap.data());
-      return docSnap.data();
-    } else {
-      logger.error("No such document!");
-      return null;
-    }
-  } catch (e) {
-    logger.error(`Error getting user: ${e}`);
-    throw e;
-  }
-};
-
-// Get all users under a manager
-const getUsersByManager = async (managerId) => {
-  try {
-    const usersRef = collection(db, "users");
-    const querySnapshot = await getDocs(usersRef);
-    const users = [];
-    querySnapshot.forEach((doc) => {
-      if (doc.data().reportTo === managerId) {
-        users.push(doc.data());
+      const id = docSnap.id;
+      const data = docSnap.data();
+      data.createdOn = data.createdOn.toDate();
+      if (data.accessLevel == 2) {
+        data.accountInfo = await getAdmin(userId);
       }
-    });
-    logger.info(`Users data: ${users}`);
-    return users;
-  } catch (e) {
-    logger.error(`Error getting users: ${e}`);
-    throw e;
-  }
-};
-
-// Get upper manager of a user
-const getUpperManager = async (userId) => {
-  try {
-    const docRef = doc(db, "users", userId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      logger.info(`User data: ${docSnap.data()}`);
-      const managerId = docSnap.data().reportTo;
-      const managerRef = doc(db, "users", managerId);
-      const managerSnap = await getDoc(managerRef);
-      if (managerSnap.exists()) {
-        logger.info(`Manager data: ${managerSnap.data()}`);
-        return managerSnap.data();
-      } else {
-        logger.error("No such document!");
-        return null;
+      if (data.accessLevel == 1) {
+        data.accountInfo = await getManager(userId);
       }
+      if (data.accessLevel == 0) {
+        data.accountInfo = await getEmployee(userId);
+      }
+      return { id, ...data };
     } else {
       logger.error("No such document!");
       return null;
@@ -135,6 +132,10 @@ const getUpperManager = async (userId) => {
 };
 
 // Update a user profile
+// This is not used for updating the user's account info, email, notification list, or createdOn
+// @param userId: string
+// @param user: User class
+// @return user: User class
 const updateUserInfo = async (userId, user) => {
   logger.info("updateUserInfo called");
   let userUpdatedData = user;
@@ -160,10 +161,10 @@ const updateUserInfo = async (userId, user) => {
       if (userUpdatedData.active === -1) {
         userUpdatedData.active = userDataFromDb.active;
       }
-      userUpdatedData.reportTo = userDataFromDb.reportTo;
-      userUpdatedData.employeeList = userDataFromDb.employeeList;
       userUpdatedData.createdOn = userDataFromDb.createdOn;
       userUpdatedData.email = userDataFromDb.email;
+      userUpdatedData.accountInfo = userDataFromDb.accountInfo;
+      userUpdatedData.notificationList = userDataFromDb.notificationList;
       logger.info(userUpdatedData.getDataForDB());
       const docRef = await setDoc(
         doc(db, "users", userUpdatedData.getId()),
@@ -186,19 +187,39 @@ const updateUserInfo = async (userId, user) => {
 // Delete a user profile
 const deleteUser = async (userId) => {
   try {
+    const user = getUserInfo(userId);
+    let successfulDeleteCheck = true;
+    if (user.accessLevel == 2) {
+      successfulDeleteCheck = await deleteAdmin(userId);
+    }
+    if (user.accessLevel == 1) {
+      successfulDeleteCheck = await deleteManager(userId);
+    }
+    if (user.accessLevel == 0) {
+      successfulDeleteCheck = await deleteEmployee(userId);
+    }
+    if (!successfulDeleteCheck) {
+      logger.error(`Error deleting sub collections`);
+      return false;
+    }
+    // remove user document in the collection
     const docRef = doc(db, "users", userId);
     await deleteDoc(docRef);
-    logger.info(`User deleted successfully: ${docRef}`);
-    return docRef;
+    logger.info(`User deleted successfully: ${userId}`);
+    // remove user from auth db
+    if (!(await removeUserFromAuthDb(userId))) {
+      logger.error(`Error deleting user from auth db: ${userId}`);
+      return false;
+    }
+    logger.info(`User deleted from auth db: ${userId}`);
+    return true;
   } catch (e) {
     logger.error(`Error deleting user: ${e}`);
-    throw e;
+    return false;
   }
 };
 
 module.exports = {
-  getUpperManager,
-  getUsersByManager,
   getUserInfo,
   createUser,
   updateUserInfo,
