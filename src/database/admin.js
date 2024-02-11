@@ -118,3 +118,5 @@ deleteAdmin = async (adminId) => {
     throw e;
   }
 };
+
+module.exports = { Admin, createAdmin, getAdmin, updateAdmin, deleteAdmin };

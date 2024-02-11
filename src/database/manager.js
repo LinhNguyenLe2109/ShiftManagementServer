@@ -2,7 +2,13 @@ const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const { getUserInfo } = require("../database/users");
-const { getCategory } = require("../database/category");
+const {
+  getCategory,
+  deleteAllCategoriesForManager,
+} = require("../database/category");
+const {
+  removeCategoryForAllEmployeesUnderManager,
+} = require("../database/employee");
 
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {
@@ -240,10 +246,16 @@ const deleteManager = async (managerId) => {
     if (manager === null) {
       return false;
     }
+    // return false if manager has employees
     if (manager.employees.length > 0) {
       return false;
     }
-    // TODO: delete all unassigned shift and categories for the manager
+
+    // Reset Category for all employees
+    removeCategoryForAllEmployeesUnderManager(managerId);
+    // Delete all category for a manager
+    await deleteAllCategoriesForManager(managerId);
+    // TODO: delete all unassigned shifts
     const docRef = doc(db, "managers", managerId);
     await deleteDoc(docRef);
     logger.info(`Manager deleted with ID: ${managerId}`);

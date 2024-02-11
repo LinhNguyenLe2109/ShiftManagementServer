@@ -4,6 +4,9 @@ const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { removeUserFromAuthDb } = require("../database/authentication");
 const { v4: uuidv4 } = require("uuid");
+const { deleteAdmin } = require("../database/admin");
+const { deleteManager } = require("../database/manager");
+const { deleteEmployee } = require("../database/employee");
 
 class User {
   constructor({
@@ -154,6 +157,21 @@ const updateUserInfo = async (userId, user) => {
 // Delete a user profile
 const deleteUser = async (userId) => {
   try {
+    const user = getUserInfo(userId);
+    let successfulDeleteCheck = true;
+    if (user.accessLevel == 2) {
+      successfulDeleteCheck = await deleteAdmin(userId);
+    }
+    if (user.accessLevel == 1) {
+      successfulDeleteCheck = await deleteManager(userId);
+    }
+    if (user.accessLevel == 0) {
+      successfulDeleteCheck = await deleteEmployee(userId);
+    }
+    if (!successfulDeleteCheck) {
+      logger.error(`Error deleting sub collections`);
+      return false;
+    }
     // remove user document in the collection
     const docRef = doc(db, "users", userId);
     await deleteDoc(docRef);
@@ -164,7 +182,6 @@ const deleteUser = async (userId) => {
       return false;
     }
     logger.info(`User deleted from auth db: ${userId}`);
-    //TODO: remove account info from other collections
     return true;
   } catch (e) {
     logger.error(`Error deleting user: ${e}`);

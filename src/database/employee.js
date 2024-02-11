@@ -1,5 +1,11 @@
 const { db } = require("../database/firebase.config");
-const { doc, setDoc, getDoc } = require("firebase/firestore");
+const {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs,
+} = require("firebase/firestore");
 const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { getUserInfo } = require("../database/users");
@@ -165,6 +171,19 @@ const deleteEmployee = async (employeeId) => {
     logger.error(`Error deleting employee: ${e}`);
     throw e;
   }
+};
+
+removeCategoryForAllEmployeesUnderManager = async (managerId) => {
+  const docRef = collection(db, "employees");
+  const q = query(docRef, where("reportTo", "==", managerId));
+  const querySnapShot = await getDocs(q);
+  querySnapShot.forEach(async (doc) => {
+    const id = doc.id;
+    const data = doc.data();
+    const employee = new Employee({ id, ...data });
+    employee.setCategory(-1);
+    await setDoc(doc(db, "employees", id), employee);
+  });
 };
 
 module.exports = {
