@@ -4,9 +4,17 @@ const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { removeUserFromAuthDb } = require("../database/authentication");
 const { v4: uuidv4 } = require("uuid");
-const { deleteAdmin, createAdmin } = require("../database/admin");
-const { deleteManager, createManager } = require("../database/manager");
-const { deleteEmployee, createEmployee } = require("../database/employee");
+const { deleteAdmin, createAdmin, getAdmin } = require("../database/admin");
+const {
+  deleteManager,
+  createManager,
+  getManager,
+} = require("../database/manager");
+const {
+  deleteEmployee,
+  createEmployee,
+  getEmployee,
+} = require("../database/employee");
 
 class User {
   constructor({
@@ -103,6 +111,15 @@ const getUserInfo = async (userId) => {
       const id = docSnap.id;
       const data = docSnap.data();
       data.createdOn = data.createdOn.toDate();
+      if (data.accessLevel == 2) {
+        data.accountInfo = await getAdmin(userId);
+      }
+      if (data.accessLevel == 1) {
+        data.accountInfo = await getManager(userId);
+      }
+      if (data.accessLevel == 0) {
+        data.accountInfo = await getEmployee(userId);
+      }
       return { id, ...data };
     } else {
       logger.error("No such document!");
