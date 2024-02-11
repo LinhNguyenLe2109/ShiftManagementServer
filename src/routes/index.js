@@ -6,7 +6,6 @@ const authenticateJWT = require("../middleware/auth");
 
 const router = express.Router({ mergeParams: true });
 router.use("/user", require("./api/user"));
-router.use("/test", authenticateJWT, require("./api/test"));
 
 //health check
 router.get("/", (req, res) => {
