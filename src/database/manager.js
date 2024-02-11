@@ -1,16 +1,8 @@
 const { db } = require("../database/firebase.config");
-const {
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  collection,
-} = require("firebase/firestore");
+const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
-const { v4: uuidv4 } = require("uuid");
 const { getUserInfo } = require("../database/users");
 const { getCategory } = require("../database/category");
-const { get } = require("superagent");
 
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {

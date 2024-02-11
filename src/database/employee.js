@@ -1,11 +1,5 @@
 const { db } = require("../database/firebase.config");
-const {
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  collection,
-} = require("firebase/firestore");
+const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { getUserInfo } = require("../database/users");
