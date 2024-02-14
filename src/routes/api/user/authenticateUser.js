@@ -18,7 +18,7 @@ const authenticateUser = async (req, res) => {
       const userId = user.uid;
       const userInfo = await getUserInfo(userId);
       const userAccessLevel = userInfo.accessLevel;
-      res.status(200).json({ token: idToken, accessLevel: userAccessLevel });
+      res.status(200).json({ token: idToken, accessLevel: userAccessLevel, userId: userId});
     } else {
       res.status(401).send("Invalid credentials");
     }

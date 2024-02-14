@@ -174,8 +174,7 @@ const getManager = async (managerId) => {
 // To remove multiple unassigned shifts, use removeMultipleUnassignedShifts key
 // @param employeeId: string
 // @param updatedEmployee: object
-const updateManager = async (managerId, manager) => {
-  let managerUpdatedData = manager;
+const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
 
   const manager = await getManager(managerId);
