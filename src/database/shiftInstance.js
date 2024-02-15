@@ -80,6 +80,31 @@ const getShiftInstance = async (shiftInstanceId) => {
   }
 };
 
+const getShiftInstancesFromRange = async (employeeId, start, end) => {
+  try {
+    const docRef = collection(db, "shiftInstances");
+    const q = query(docRef, 
+      where("startTime", ">=", start), 
+      where("startTime", "<=", end), 
+      where("employeeId", "==", employeeId)
+    );
+    const querySnapShot = await getDocs(q);
+    const shiftInstances = [];
+    if (querySnapShot.empty) {
+      return [];
+    }
+    querySnapShot.forEach((doc) => {
+      id = doc.id;
+      data = doc.data();
+      shiftInstances.push(new shiftInstance({ id, ...data }));
+    });
+    return shiftInstances;
+  } catch (e) {
+    logger.error(`Error getting shiftInstancesFromRange: ${e}`);
+    throw e;
+  }
+};
+
 const updateShiftInstance = async (updatedShiftInstance) => {
   try {
     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
@@ -101,7 +126,34 @@ const updateShiftInstance = async (updatedShiftInstance) => {
   }
 };
 
-// delete a category
+//Prevents parentSchedule, employeeId, report from being cleared. Simpler than retrieving them in some cases
+const softUpdateShiftInstance = async (updatedShiftInstance) => {
+  try {
+    const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
+    const shiftInstance = await getShiftInstance(updatedShiftInstance.id);
+    // Verify the category
+    if (!verifyString(categoryObj.name))
+      updatedShiftInstance.name = shiftInstance.name;
+    if (!categoryObj.startTime)
+      updatedShiftInstance.startTime = shiftInstance.startTime;
+    if (!categoryObj.endTime)
+      updatedShiftInstance.endTime = shiftInstance.endTime;
+    if (!verifyString(categoryObj.parentSchedule))
+      updatedShiftInstance.parentSchedule = shiftInstance.parentSchedule;
+    if (!verifyString(categoryObj.employeeId))
+      updatedShiftInstance.employeeId = shiftInstance.employeeId;
+    if (!verifyString(categoryObj.report))
+      updatedShiftInstance.report = shiftInstance.report;
+    updatedShiftInstance.createdBy = shiftInstance.createdBy;
+    await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
+    logger.info(`ShiftInstance updated with ID: ${updatedShiftInstance.id}`);
+    return updatedShiftInstance;
+  } catch (e) {
+    logger.error(`Error updating shiftInstance: ${e}`);
+    throw e;
+  }
+};
+
 const deleteShiftInstance = async (shiftInstanceId) => {
   try {
     logger.info(`Deleting shiftInstance with ID: ${shiftInstanceId}`);
@@ -121,4 +173,6 @@ module.exports = {
   getShiftInstance,
   updateShiftInstance,
   deleteShiftInstance,
+  softUpdateShiftInstance,
+  getShiftInstancesFromRange,
 };
