@@ -19,6 +19,7 @@ const authenticateJWT = async (req, res, next) => {
         return res.sendStatus(403);
       });
   } else {
+    logger.debug("Request missing authorization header!");
     res.sendStatus(401);
   }
 };

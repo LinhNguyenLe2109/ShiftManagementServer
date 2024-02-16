@@ -11,7 +11,7 @@ router.get("/", authenticateJWT, require("./getUser"));
 router.post("/login", require("./authenticateUser"));
 
 // POST /user/register
-router.post("/register", require("./createNewUser"));
+router.post("/register", authenticateJWT, require("./createNewUser"));
 
 // PUT /user
 router.put("/", authenticateJWT, require("./updateUser"));
