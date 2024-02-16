@@ -1,5 +1,5 @@
 const logger = require("../../../logger");
-const { createShiftInstance, deleteShiftInstance, softUpdateShiftInstance } = require("../../../database/shiftInstance");
+const { createShiftInstance, deleteShiftInstance, softUpdateShiftInstance, ShiftInstance } = require("../../../database/shiftInstance");
 
 const updateSchedule = async (req, res) => {
   try {
@@ -7,7 +7,7 @@ const updateSchedule = async (req, res) => {
     logger.debug(req.body);
     //TODO: permissions
     for (const newShift of req.body.addedShifts) {
-      await createShiftInstance({
+      await createShiftInstance(new ShiftInstance({
         id: null,
         name: newShift.name,
         desc: newShift.desc,
@@ -18,7 +18,7 @@ const updateSchedule = async (req, res) => {
         employeeId: req.body.scheduleUser,
         completed: newShift.completed,
         report: null,
-      });
+      }));
     }
     for (const deletedShiftId of req.body.deletedShifts) {
       await deleteShiftInstance(deletedShiftId);
@@ -26,9 +26,9 @@ const updateSchedule = async (req, res) => {
     for (const editedShift of req.body.editedShifts) {
       editedShift.startTime = new Date(editedShift.startTime);
       editedShift.endTime = new Date(editedShift.endTime);
-      await softUpdateShiftInstance(editedShift);
+      await softUpdateShiftInstance(new ShiftInstance(editedShift));
     }
-    return res.status(200);
+    return res.status(200).send("Success!");
   } catch (e) {
     logger.error(`Error in updateSchedule: ${e}`);
     return res.status(500).send("Error in updateSchedule");

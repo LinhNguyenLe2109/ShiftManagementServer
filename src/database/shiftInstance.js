@@ -3,6 +3,10 @@ const {
   doc,
   setDoc,
   getDoc,
+  query,
+  where,
+  getDocs,
+  collection,
   deleteDoc,
 } = require("firebase/firestore");
 const logger = require("../logger");
@@ -41,13 +45,15 @@ class ShiftInstance {
 
 const createShiftInstance = async (shiftInstance) => {
   const shiftInstanceObj = new ShiftInstance(shiftInstance);
-  if (!verifyString(categoryObj.name))
+  if (!verifyString(shiftInstanceObj.name))
     throw new Error("Name is required");
-  if (!categoryObj.startTime)
+  if (!shiftInstanceObj.startTime)
     throw new Error("startTime is required");
-  if (!categoryObj.endTime)
+  if (!shiftInstanceObj.endTime)
     throw new Error("endTime is required");
-  //if (!verifyString(categoryObj.employeeId))
+  shiftInstanceObj.startTime = shiftInstanceObj.startTime.toISOString();
+  shiftInstanceObj.endTime = shiftInstanceObj.endTime.toISOString();
+  //if (!verifyString(shiftInstanceObj.employeeId))
   //  throw new Error("employeeId is required");
   logger.info(shiftInstanceObj);
   try {
@@ -66,9 +72,12 @@ const getShiftInstance = async (shiftInstanceId) => {
     const docRef = doc(db, "shiftInstances", shiftInstanceId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(`shiftInstance data: ${docSnap.data()}`);
+      logger.info(`shiftInstance data:`);
+      logger.info(docSnap.data());
       const id = docSnap.id;
       const data = docSnap.data();
+      data.startTime = new Date(data.startTime);
+      data.endTime = new Date(data.endTime);
       return { id, ...data };
     } else {
       logger.error("No such document!");
@@ -96,7 +105,9 @@ const getShiftInstancesFromRange = async (employeeId, start, end) => {
     querySnapShot.forEach((doc) => {
       id = doc.id;
       data = doc.data();
-      shiftInstances.push(new shiftInstance({ id, ...data }));
+      data.startTime = new Date(data.startTime);
+      data.endTime = new Date(data.endTime);
+      shiftInstances.push(new ShiftInstance({ id, ...data }));
     });
     return shiftInstances;
   } catch (e) {
@@ -108,15 +119,18 @@ const getShiftInstancesFromRange = async (employeeId, start, end) => {
 const updateShiftInstance = async (updatedShiftInstance) => {
   try {
     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
-    const shiftInstance = await getShiftInstance(updatedShiftInstance.id);
-    // Verify the category
-    if (!verifyString(categoryObj.name))
-      updatedShiftInstance.name = shiftInstance.name;
-    if (!categoryObj.startTime)
-      updatedShiftInstance.startTime = shiftInstance.startTime;
-    if (!categoryObj.endTime)
-      updatedShiftInstance.endTime = shiftInstance.endTime;
-    updatedShiftInstance.createdBy = shiftInstance.createdBy;
+    const shiftInstanceObj = await getShiftInstance(updatedShiftInstance.id);
+    // Verify the shiftInstanceObj
+    //This will break with bad dates! TODO
+    updatedShiftInstance.startTime = updatedShiftInstance.startTime.toISOString();
+    updatedShiftInstance.endTime = updatedShiftInstance.endTime.toISOString();
+    if (!verifyString(updatedShiftInstance.name))
+      updatedShiftInstance.name = shiftInstanceObj.name;
+    if (!updatedShiftInstance.startTime)
+      updatedShiftInstance.startTime = shiftInstanceObj.startTime;
+    if (!updatedShiftInstance.endTime)
+      updatedShiftInstance.endTime = shiftInstanceObj.endTime;
+    updatedShiftInstance.createdBy = shiftInstanceObj.createdBy;
     await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
     logger.info(`ShiftInstance updated with ID: ${updatedShiftInstance.id}`);
     return updatedShiftInstance;
@@ -130,26 +144,28 @@ const updateShiftInstance = async (updatedShiftInstance) => {
 const softUpdateShiftInstance = async (updatedShiftInstance) => {
   try {
     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
-    const shiftInstance = await getShiftInstance(updatedShiftInstance.id);
-    // Verify the category
-    if (!verifyString(categoryObj.name))
-      updatedShiftInstance.name = shiftInstance.name;
-    if (!categoryObj.startTime)
-      updatedShiftInstance.startTime = shiftInstance.startTime;
-    if (!categoryObj.endTime)
-      updatedShiftInstance.endTime = shiftInstance.endTime;
-    if (!verifyString(categoryObj.parentSchedule))
-      updatedShiftInstance.parentSchedule = shiftInstance.parentSchedule;
-    if (!verifyString(categoryObj.employeeId))
-      updatedShiftInstance.employeeId = shiftInstance.employeeId;
-    if (!verifyString(categoryObj.report))
-      updatedShiftInstance.report = shiftInstance.report;
-    updatedShiftInstance.createdBy = shiftInstance.createdBy;
+    const shiftInstanceObj = await getShiftInstance(updatedShiftInstance.id);
+    // Verify the shiftInstanceObj
+    updatedShiftInstance.startTime = updatedShiftInstance.startTime.toISOString();
+    updatedShiftInstance.endTime = updatedShiftInstance.endTime.toISOString();
+    if (!verifyString(updatedShiftInstance.name))
+      updatedShiftInstance.name = shiftInstanceObj.name;
+    if (!updatedShiftInstance.startTime)
+      updatedShiftInstance.startTime = shiftInstanceObj.startTime;
+    if (!updatedShiftInstance.endTime)
+      updatedShiftInstance.endTime = shiftInstanceObj.endTime;
+    if (!verifyString(updatedShiftInstance.parentSchedule))
+      updatedShiftInstance.parentSchedule = shiftInstanceObj.parentSchedule;
+    if (!verifyString(updatedShiftInstance.employeeId))
+      updatedShiftInstance.employeeId = shiftInstanceObj.employeeId;
+    if (!verifyString(updatedShiftInstance.report))
+      updatedShiftInstance.report = shiftInstanceObj.report;
+    updatedShiftInstance.createdBy = shiftInstanceObj.createdBy;
     await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
-    logger.info(`ShiftInstance updated with ID: ${updatedShiftInstance.id}`);
+    logger.info(`ShiftInstance soft updated with ID: ${updatedShiftInstance.id}`);
     return updatedShiftInstance;
   } catch (e) {
-    logger.error(`Error updating shiftInstance: ${e}`);
+    logger.error(`Error soft updating shiftInstance: ${e}`);
     throw e;
   }
 };
