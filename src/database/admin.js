@@ -50,7 +50,7 @@ class Admin {
 
 const createAdmin = async (adminId) => {
   try {
-    await setDoc(doc(db, "admin", admin.id), {
+    await setDoc(doc(db, "admin", adminId), {
       id: adminId,
       managerList: [],
     });
