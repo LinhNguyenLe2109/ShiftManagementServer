@@ -13,6 +13,7 @@ const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
 const verifyString = require("../utils/verifyString");
 const verifyDate = require("../utils/verifyDate");
+const { Timestamp } = require("firebase/firestore");
 
 class ShiftInstance {
   // @param {string} id - The id of the shiftInstance
@@ -97,10 +98,10 @@ class ShiftInstance {
 // Create a shiftInstance
 // @param shiftInstance: object
 const createShiftInstance = async (shiftData) => {
-  logger.info("Creating shiftInstance");
-  logger.info(shiftData);
+  // logger.info("Creating shiftInstance");
+  // logger.info(shiftData);
   const shiftInstanceObj = new ShiftInstance(shiftData);
-  logger.info(shiftInstanceObj);
+  // logger.info(shiftInstanceObj);
   try {
     // check if the shiftInstanceObj already exists
     if (await getShiftInstance(shiftInstanceObj.id)) {
@@ -148,8 +149,8 @@ const getShiftInstance = async (shiftInstanceId) => {
     const docRef = doc(db, "shiftInstances", shiftInstanceId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(`shiftInstance data:`);
-      logger.info(docSnap.data());
+      // logger.info(`shiftInstance data:`);
+      // logger.info(docSnap.data());
       const id = docSnap.id;
       const data = docSnap.data();
       data.startTime = data.startTime.toDate();
@@ -165,7 +166,7 @@ const getShiftInstance = async (shiftInstanceId) => {
   }
 };
 
-// Get a list of shiftInstances from a range
+// Get a list of shiftInstances from a range for a specific employee
 // @param employeeId: string
 // @param start: Date
 // @param end: Date
@@ -173,6 +174,17 @@ const getShiftInstance = async (shiftInstanceId) => {
 const getShiftInstancesFromRange = async (employeeId, start, end) => {
   try {
     const docRef = collection(db, "shiftInstances");
+    if (!verifyString(employeeId)) {
+      throw new Error("Employee ID is required/invalid");
+    }
+    if (!verifyDate(start)) {
+      throw new Error("Invalid date format for start");
+    }
+    if (!verifyDate(end)) {
+      throw new Error("Invalid date format for end");
+    }
+    start = Timestamp.fromDate(new Date(start));
+    end = Timestamp.fromDate(new Date(end));
     const q = query(
       docRef,
       where("startTime", ">=", start),
@@ -191,10 +203,12 @@ const getShiftInstancesFromRange = async (employeeId, start, end) => {
       data.endTime = data.endTime.toDate();
       shiftInstances.push(new ShiftInstance({ id, ...data }));
     });
+    logger.info(`List of shiftInstances:`);
+    logger.info(shiftInstances);
     return shiftInstances;
   } catch (e) {
     logger.error(`Error getting shiftInstancesFromRange: ${e}`);
-    throw e;
+    throw new Error("Error getting shiftInstancesFromRange:" + e);
   }
 };
 
@@ -308,7 +322,7 @@ const deleteShiftInstance = async (shiftInstanceId) => {
     // TODO: remove report
     const docRef = doc(db, "shiftInstances", shiftInstanceId);
     await deleteDoc(docRef);
-    logger.info(`shiftInstance deleted with ID: ${shiftInstanceId}`);
+    // logger.info(`shiftInstance deleted with ID: ${shiftInstanceId}`);
     return true;
   } catch (e) {
     logger.error(`Error deleting shiftInstance: ${e}`);
