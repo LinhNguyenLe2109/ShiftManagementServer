@@ -127,13 +127,17 @@ class Manager {
 }
 
 const createManager = async (managerId) => {
-  const manager = new Manager({ id: managerId });
   try {
-    if (getManager(managerId)) {
+    if (await getManager(managerId)) {
       return false;
     }
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, manager);
+    await setDoc(docRef, {
+      id: managerId,
+      employeeList: [],
+      categoryList: [],
+      unassignedShifts: [],
+    });
     return true;
   } catch (e) {
     logger.error(`Error creating manager: ${e}`);
