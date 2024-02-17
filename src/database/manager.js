@@ -10,6 +10,11 @@ const {
   removeCategoryForAllEmployeesUnderManager,
 } = require("../database/employee");
 
+const {
+  getShiftInstance,
+  deleteShiftInstance,
+} = require("../database/shiftInstance");
+
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {
     this.id = id;
@@ -84,30 +89,54 @@ class Manager {
   };
 
   getUnassignedShifts = async () => {
-    // TODO: fetch unassigned shifts from the database
-    return this.unassignedShifts;
+    let shifts = [];
+    for (let i = 0; i < this.unassignedShifts.length; i++) {
+      const shift = await getShiftInstance(this.unassignedShifts[i]);
+      shifts.push(shift);
+    }
+    return shifts;
   };
 
-  addUnassignedShift = async (shiftId) => {
-    this.unassignedShifts.push(shiftId);
+  // @param shiftId: string
+  // @param categoryId: array
+  addUnassignedShift = async ({ shiftId, categoryList }) => {
+    this.unassignedShifts.push({ shiftId, categoryList });
   };
 
-  addMultipleUnassignedShifts = async (shiftIds) => {
-    this.unassignedShifts = this.unassignedShifts.concat(shiftIds);
+  addMultipleUnassignedShifts = async (unassignedShiftList) => {
+    for (let i = 0; i < unassignedShiftList.length; i++) {
+      if (
+        unassignedShiftList[i].hasOwnProperty("shiftId") &&
+        unassignedShiftList[i].shiftId === undefined
+      ) {
+        throw new Error("Shift ID is required");
+      }
+      if (
+        unassignedShiftList[i].hasOwnProperty("categoryList") &&
+        unassignedShiftList[i].categoryList === undefined
+      ) {
+        throw new Error("Category List is required");
+      }
+    }
+    this.unassignedShifts = this.unassignedShifts.concat(unassignedShiftList);
   };
 
   removeUnassignedShift = async (shiftId) => {
-    const index = this.unassignedShifts.indexOf(shiftId);
-    if (index > -1) {
-      this.unassignedShifts.splice(index, 1);
+    for (let i = 0; i < this.unassignedShifts.length; i++) {
+      if (this.unassignedShifts[i].shiftId === shiftId) {
+        this.unassignedShifts.splice(i, 1);
+        break;
+      }
     }
   };
 
   removeMultipleUnassignedShifts = async (shiftIds) => {
     for (let i = 0; i < shiftIds.length; i++) {
-      const index = this.unassignedShifts.indexOf(shiftIds[i]);
-      if (index > -1) {
-        this.unassignedShifts.splice(index, 1);
+      for (let j = 0; j < this.unassignedShifts.length; j++) {
+        if (this.unassignedShifts[j].shiftId === shiftIds[i]) {
+          this.unassignedShifts.splice(j, 1);
+          break;
+        }
       }
     }
   };
@@ -254,7 +283,10 @@ const deleteManager = async (managerId) => {
     removeCategoryForAllEmployeesUnderManager(managerId);
     // Delete all category for a manager
     await deleteAllCategoriesForManager(managerId);
-    // TODO: delete all unassigned shifts
+    // delete all unassigned shifts
+    for (let i = 0; i < manager.unassignedShifts.length; i++) {
+      await deleteShiftInstance(manager.unassignedShifts[i].shiftId);
+    }
     const docRef = doc(db, "managers", managerId);
     await deleteDoc(docRef);
     logger.info(`Manager deleted with ID: ${managerId}`);

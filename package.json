@@ -15,8 +15,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test:unit": "jest --testPathPattern='/test/unit' --detectOpenHandles",
-    "test:integration": "jest --testPathPattern='/test/integration' --detectOpenHandles",
+    "test:unit": "jest --testPathPattern='/test/unit' --runInBand --detectOpenHandles",
+    "test:integration": "jest --testPathPattern='/test/integration' --runInBand --detectOpenHandles",
     "coverage": "jest --coverage",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"
