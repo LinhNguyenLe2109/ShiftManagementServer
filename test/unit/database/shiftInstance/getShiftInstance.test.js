@@ -7,7 +7,7 @@ const {
 const { v4: uuidv4 } = require("uuid");
 const logger = require("../../../../src/logger");
 
-describe("createShiftInstance", () => {
+describe("getShiftInstance", () => {
   const shiftId = uuidv4();
   let shiftInstance = null;
   beforeEach(async () => {
