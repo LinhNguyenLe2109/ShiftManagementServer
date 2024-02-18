@@ -126,30 +126,6 @@ const createShiftInstance = async (shiftData) => {
   }
 };
 
-// const createShiftInstance = async (shiftInstance) => {
-//   const shiftInstanceObj = new ShiftInstance(shiftInstance);
-//   if (!verifyString(shiftInstanceObj.name)) throw new Error("Name is required");
-//   if (!shiftInstanceObj.startTime) throw new Error("startTime is required");
-//   if (!shiftInstanceObj.endTime) throw new Error("endTime is required");
-//   shiftInstanceObj.startTime = shiftInstanceObj.startTime.toISOString();
-//   shiftInstanceObj.endTime = shiftInstanceObj.endTime.toISOString();
-//   //if (!verifyString(shiftInstanceObj.employeeId))
-//   //  throw new Error("employeeId is required");
-//   logger.info(shiftInstanceObj);
-//   try {
-//     const shiftInstanceId = shiftInstanceObj.id;
-//     await setDoc(
-//       doc(db, "shiftInstances", shiftInstanceId),
-//       shiftInstanceObj.getDataForDB()
-//     );
-//     logger.info(`ShiftInstance created with ID: ${shiftInstanceId}`);
-//     return await getShiftInstance(shiftInstanceId);
-//   } catch (e) {
-//     logger.error(`Error creating ShiftInstance: ${e}`);
-//     throw e;
-//   }
-// };
-
 const getShiftInstance = async (shiftInstanceId) => {
   try {
     const docRef = doc(db, "shiftInstances", shiftInstanceId);
@@ -276,39 +252,6 @@ const updateShiftInstance = async (
     throw e;
   }
 };
-
-//Prevents parentSchedule, employeeId, report from being cleared. Simpler than retrieving them in some cases
-// const softUpdateShiftInstance = async (updatedShiftInstance) => {
-//   try {
-//     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
-//     const shiftInstanceObj = await getShiftInstance(updatedShiftInstance.id);
-//     // Verify the shiftInstanceObj
-//     updatedShiftInstance.startTime =
-//       updatedShiftInstance.startTime.toISOString();
-//     updatedShiftInstance.endTime = updatedShiftInstance.endTime.toISOString();
-//     if (!verifyString(updatedShiftInstance.name))
-//       updatedShiftInstance.name = shiftInstanceObj.name;
-//     if (!updatedShiftInstance.startTime)
-//       updatedShiftInstance.startTime = shiftInstanceObj.startTime;
-//     if (!updatedShiftInstance.endTime)
-//       updatedShiftInstance.endTime = shiftInstanceObj.endTime;
-//     if (!verifyString(updatedShiftInstance.parentSchedule))
-//       updatedShiftInstance.parentSchedule = shiftInstanceObj.parentSchedule;
-//     if (!verifyString(updatedShiftInstance.employeeId))
-//       updatedShiftInstance.employeeId = shiftInstanceObj.employeeId;
-//     if (!verifyString(updatedShiftInstance.report))
-//       updatedShiftInstance.report = shiftInstanceObj.report;
-//     updatedShiftInstance.createdBy = shiftInstanceObj.createdBy;
-//     await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
-//     logger.info(
-//       `ShiftInstance soft updated with ID: ${updatedShiftInstance.id}`
-//     );
-//     return updatedShiftInstance;
-//   } catch (e) {
-//     logger.error(`Error soft updating shiftInstance: ${e}`);
-//     throw e;
-//   }
-// };
 
 const deleteShiftInstance = async (shiftInstanceId) => {
   try {

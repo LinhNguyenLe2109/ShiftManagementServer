@@ -186,6 +186,7 @@ const getAllShiftSchedules = async (employeeId) => {
 // To add multiple shifts to the shift schedule, use addMultipleShifts key
 // @param shiftScheduleId: string
 // @param updatedShiftScheduleData: object
+// @returns ShiftSchedule object
 const updateShiftSchedule = async (
   shiftScheduleId,
   updatedShiftScheduleData

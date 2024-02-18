@@ -3,10 +3,15 @@ const router = express.Router({ mergeParams: true });
 const logger = require("../../../logger");
 const authenticateJWT = require("../../../middleware/auth");
 
-router.get("/get/:shiftId", authenticateJWT, require("./getShift"));
-router.get("/getRange", authenticateJWT, require("./getShifts"));
-router.post("/create", authenticateJWT, require("./createShift"));
-router.delete("/delete", authenticateJWT, require("./deleteShift"));
-router.put("/update", authenticateJWT, require("./updateShift"));
+router.get("/get/:scheduleId", authenticateJWT, require("./getSchedule"));
+router.get(
+  "/getAll/:employeeId",
+  authenticateJWT,
+  require("./getAllSchedules")
+);
+router.get("/getByDate", authenticateJWT, require("./getScheduleByDate"));
+router.post("/create", authenticateJWT, require("./createSchedule"));
+router.delete("/delete", authenticateJWT, require("./deleteSchedule"));
+router.put("/update", authenticateJWT, require("./updateSchedule"));
 
 module.exports = router;
