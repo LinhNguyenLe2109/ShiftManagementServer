@@ -14,16 +14,16 @@ const { v4: uuidv4 } = require("uuid");
 const { verifyString } = require("../utils/verifyString");
 const { verifyDate } = require("../utils/verifyDate");
 const { Timestamp } = require("firebase/firestore");
+const { getShiftInstance } = require("./shiftInstance");
 class ShiftSchedule {
-  constructor({
-    id,
-    archived,
-    shiftIdList,
-    desc,
-    startTime,
-    endTime,
-    employeeId,
-  }) {
+  // ShiftSchedule class
+  // @param id: string
+  // @param archived: boolean
+  // @param shiftIdList: Array of strings
+  // @param desc: string
+  // @param startTime: Date
+  // @param employeeId: string
+  constructor({ id, archived, shiftIdList, desc, startTime, employeeId }) {
     this.id = id ? id : uuidv4();
     this.desc = verifyString(desc) ? desc : "";
     // check if the date is valid
@@ -36,14 +36,7 @@ class ShiftSchedule {
     } else {
       throw new Error("Start time is required");
     }
-    // Same as above
-    if (verifyDate(endTime)) {
-      this.endTime = new Date(endTime);
-    } else if (verifyString(endTime)) {
-      throw new Error("Invalid date format for endTime");
-    } else {
-      throw new Error("End time is required");
-    }
+    this.endTime = new Date(this.startTime.getTime() + 7 * 24 * 60 * 60 * 1000);
     // employeeId is required
     if (verifyString(employeeId)) {
       this.employeeId = employeeId;
@@ -65,13 +58,19 @@ class ShiftSchedule {
   removeMultipleShiftIds(shiftIdList) {
     this.shifts = this.shifts.filter((id) => !shiftIdList.includes(id));
   }
+  getDetailedShifts = async () => {
+    let shifts = [];
+    for (let i = 0; i < this.shifts.length; i++) {
+      const shift = await getShiftInstance(this.shifts[i]);
+      shifts.push(shift);
+    }
+    return shifts;
+  };
 }
 // createShiftSchedule creates a new shift schedule
 // @param shiftSchedule: ShiftSchedule or object
 // @returns ShiftSchedule object
-const createShiftSchedule = async (shiftSchedule) => {
-    
-};
+const createShiftSchedule = async (shiftSchedule) => {};
 
 // getShiftSchedule gets a shift schedule by its id
 // @param shiftScheduleId: string
@@ -96,7 +95,10 @@ const getAllShiftSchedules = async (employeeId) => {};
 // To add multiple shifts to the shift schedule, use addMultipleShifts key
 // @param shiftScheduleId: string
 // @param updatedShiftScheduleData: object
-const updateShiftSchedule = async (shiftScheduleId, updatedShiftScheduleData) => {};
+const updateShiftSchedule = async (
+  shiftScheduleId,
+  updatedShiftScheduleData
+) => {};
 
 // deleteShiftSchedule deletes a shift schedule
 // @param shiftScheduleId: string
