@@ -73,6 +73,12 @@ class ShiftInstance {
       completed && typeof completed == "boolean" ? completed : false;
     this.location = verifyString(location) ? location : "";
     this.report = verifyString(report) ? report : "";
+
+    if (!verifyString(createdBy) && !verifyString(parentSchedule)) {
+      throw new Error(
+        "ShiftInstance must have either a parentSchedule or createdBy"
+      );
+    }
   }
 
   getId() {
