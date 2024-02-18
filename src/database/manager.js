@@ -2,6 +2,7 @@ const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const { getUserInfo } = require("../database/users");
+const { getShiftInstance } = require("../database/shiftInstance");
 const {
   getCategory,
   deleteAllCategoriesForManager,
@@ -16,6 +17,13 @@ class Manager {
     this.employeeList = employeeList ? employeeList : [];
     this.categoryList = categoryList ? categoryList : [];
     this.unassignedShifts = unassignedShifts ? unassignedShifts : [];
+  }
+  getDataForDB() {
+    return {
+      id: this.id,
+      employeeList: this.employeeList,
+      unassignedShifts: this.unassignedShifts
+    };
   }
   getEmployeeList = async () => {
     let employees = [];
@@ -84,8 +92,12 @@ class Manager {
   };
 
   getUnassignedShifts = async () => {
-    // TODO: fetch unassigned shifts from the database
-    return this.unassignedShifts;
+    let shifts = [];
+    for (let i = 0; i < this.unassignedShifts.length; i++) {
+      const shift = await getShiftInstance(this.unassignedShifts[i]);
+      shifts.push(shift);
+    }
+    return shifts;
   };
 
   addUnassignedShift = async (shiftId) => {
@@ -97,7 +109,7 @@ class Manager {
   };
 
   removeUnassignedShift = async (shiftId) => {
-    const index = this.unassignedShifts.indexOf(shiftId);
+    const index = this.unassignedShifts.map(e => e.id).indexOf(shiftId);
     if (index > -1) {
       this.unassignedShifts.splice(index, 1);
     }
@@ -181,7 +193,7 @@ const getManager = async (managerId) => {
 const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
 
-  const manager = await getManager(managerId);
+  const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
     manager.addEmployee(managerUpdatedData.addEmployee);
@@ -231,7 +243,7 @@ const updateManager = async (managerId, managerUpdatedData) => {
   }
   try {
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, manager);
+    await setDoc(docRef, await manager.getDataForDB());
     return manager;
   } catch (e) {
     logger.error(`Error updating manager: ${e}`);
