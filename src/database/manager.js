@@ -2,7 +2,7 @@ const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const { getUserInfo } = require("../database/users");
-const { getShiftInstance } = require("../database/shiftInstance");
+const { getShiftInstance, deleteShiftInstance } = require("../database/shiftInstance");
 const {
   getCategory,
   deleteAllCategoriesForManager,
@@ -270,7 +270,10 @@ const deleteManager = async (managerId) => {
     removeCategoryForAllEmployeesUnderManager(managerId);
     // Delete all category for a manager
     await deleteAllCategoriesForManager(managerId);
-    // TODO: delete all unassigned shifts
+    // delete all unassigned shifts
+    for (const x of manager.unassignedShifts)
+      deleteShiftInstance(x, Manager, updateManager)
+
     const docRef = doc(db, "managers", managerId);
     await deleteDoc(docRef);
     logger.info(`Manager deleted with ID: ${managerId}`);
