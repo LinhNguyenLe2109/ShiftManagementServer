@@ -78,12 +78,18 @@ class Employee {
 }
 
 const createEmployee = async (accountInfo, managerId) => {
-  const employee = new Employee({ id: accountInfo, reportTo: managerId });
   try {
-    if (getEmployee(accountInfo)) {
+    if (await getEmployee(accountInfo)) {
       throw new Error("Employee already exists");
     } else {
-      await setDoc(doc(db, "employees", accountInfo), employee);
+      await setDoc(doc(db, "employees", accountInfo), {
+        id: accountInfo,
+        reportTo: verifyString(managerId) ? managerId : "",
+        scheduleTemplateId: uuidv4(),
+        scheduleList: [],
+        category: -1,
+      });
+      const employee = new Employee({ id: accountInfo, reportTo: managerId });
       return employee;
     }
   } catch (e) {

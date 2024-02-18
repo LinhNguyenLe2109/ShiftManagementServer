@@ -66,6 +66,7 @@ class User {
 // @return boolean
 const createUser = async (user) => {
   const userObj = new User(user);
+  logger.info("createUser called");
   logger.info(userObj);
   try {
     const userId = userObj.getId();

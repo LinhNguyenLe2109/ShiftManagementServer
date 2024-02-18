@@ -1,6 +1,6 @@
 const logger = require("../../../logger");
 const { signup } = require("../../../database/authentication");
-const { createUser, User } = require("../../../database/users");
+const { User, createUser } = require("../../../database/users");
 const { getIdToken } = require("firebase/auth");
 
 const createNewUser = async (req, res) => {
@@ -17,7 +17,7 @@ const createNewUser = async (req, res) => {
 
     const user = await signup(email, password);
     if (user) {
-      const idToken = await getIdToken(user);
+      //const idToken = await getIdToken(user);
       userObj = new User({
         id: user.uid,
         email: user.email,
@@ -29,7 +29,8 @@ const createNewUser = async (req, res) => {
       });
       logger.debug(userObj);
       await createUser(userObj);
-      res.status(200).json({ token: idToken });
+      //res.status(200).json({ token: idToken });
+      res.status(200).json("User created");
     } else {
       res.status(401).send("Invalid credentials");
     }

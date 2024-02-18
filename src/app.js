@@ -9,7 +9,7 @@ var cors = require("cors");
 
 app.use(bodyParser.json());
 app.use(pino);
-app.use(cors());
+app.use(cors({origin: '*'}));
 
 app.use("/", require("./routes"));
 module.exports = app;
