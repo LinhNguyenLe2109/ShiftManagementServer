@@ -19,7 +19,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId1,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-12T12:00:00"),
+      startTime: new Date("2022-12-12T12:00:00"),
       endDate: new Date("2022-12-19T16:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
@@ -28,7 +28,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId2,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-20T12:00:00"),
+      startTime: new Date("2022-12-20T12:00:00"),
       endDate: new Date("2022-12-27T16:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
@@ -37,7 +37,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId3,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-28T12:00:00"),
+      startTime: new Date("2022-12-28T12:00:00"),
       endDate: new Date("2023-01-03T16:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
@@ -55,6 +55,21 @@ describe("getShiftSchedulesByDate", () => {
 
   test("get all shift schedules", async () => {
     const result = await getAllShiftSchedules(employeeId);
-    expect(result).toEqual([shiftSchedule1, shiftSchedule2, shiftSchedule3]);
+    const shiftScheduleData1 = shiftSchedule1.getDataForDb();
+    shiftScheduleData1.startTime = shiftScheduleData1.startTime.toDate();
+    shiftScheduleData1.endTime = shiftScheduleData1.endTime.toDate();
+    const shiftScheduleData2 = shiftSchedule2.getDataForDb();
+    shiftScheduleData2.startTime = shiftScheduleData2.startTime.toDate();
+    shiftScheduleData2.endTime = shiftScheduleData2.endTime.toDate();
+    const shiftScheduleData3 = shiftSchedule3.getDataForDb();
+    shiftScheduleData3.startTime = shiftScheduleData3.startTime.toDate();
+    shiftScheduleData3.endTime = shiftScheduleData3.endTime.toDate();
+    expect(result).toEqual(
+      expect.arrayContaining([
+        { id: shiftScheduleId1, ...shiftScheduleData1 },
+        { id: shiftScheduleId2, ...shiftScheduleData2 },
+        { id: shiftScheduleId3, ...shiftScheduleData3 },
+      ])
+    );
   });
 });

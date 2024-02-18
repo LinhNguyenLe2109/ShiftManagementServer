@@ -20,7 +20,7 @@ describe("getShiftSchedule", () => {
       id: shiftScheduleId,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-12T12:00:00"),
+      startTime: new Date("2022-12-12T12:00:00"),
       shiftIdList: [shiftId1, shiftId2],
       desc: "Test Shift Schedule Description",
     });
@@ -35,7 +35,7 @@ describe("getShiftSchedule", () => {
       id: shiftScheduleId,
       archived: true,
       employeeId: employeeId,
-      startDate: new Date("2022-12-15T11:00:00"),
+      startTime: new Date("2022-12-15T11:00:00"),
       shiftIdList: [shiftId3, shiftId4],
       desc: "Test Shift Schedule Description",
     });
@@ -43,9 +43,17 @@ describe("getShiftSchedule", () => {
       archived: true,
       addMultipleShifts: [shiftId3, shiftId4],
       removeMultipleShifts: [shiftId1, shiftId2],
-      startDate: new Date("2022-12-15T11:00:00"),
+      startTime: new Date("2022-12-15T11:00:00"),
     });
-    expect(result).toEqual(updatedShiftSchedule);
+    const updatedShiftScheduleData = await updatedShiftSchedule.getDataForDb();
+    updatedShiftScheduleData.startTime =
+      updatedShiftScheduleData.startTime.toDate();
+    updatedShiftScheduleData.endTime =
+      updatedShiftScheduleData.endTime.toDate();
+    expect(result).toEqual({
+      id: shiftScheduleId,
+      ...updatedShiftScheduleData,
+    });
     expect(result).toEqual(await getShiftSchedule(shiftScheduleId));
   });
 });

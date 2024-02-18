@@ -1,4 +1,3 @@
-const { beforeEach } = require("node:test");
 const {
   ShiftSchedule,
   createShiftSchedule,
@@ -7,12 +6,13 @@ const {
 const { v4: uuidv4 } = require("uuid");
 describe("createShiftSchedule", () => {
   const shiftScheduleId = uuidv4();
+  let shiftSchedule = null;
   beforeEach(async () => {
-    const shiftSchedule = new ShiftSchedule({
+    shiftSchedule = new ShiftSchedule({
       id: shiftScheduleId,
       archived: false,
       employeeId: uuidv4(),
-      startDate: new Date("2022-12-12T12:00:00"),
+      startTime: new Date("2022-12-12T12:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
     });
@@ -21,7 +21,7 @@ describe("createShiftSchedule", () => {
     await deleteShiftSchedule(shiftScheduleId);
   });
   test("throw error if startTime is invalid", async () => {
-    shiftSchedule.startDate = "abc";
+    shiftSchedule.startTime = "abc";
     try {
       await createShiftSchedule(shiftSchedule);
     } catch (e) {
@@ -29,7 +29,7 @@ describe("createShiftSchedule", () => {
     }
   });
   test("throw error if startTime is empty", async () => {
-    delete shiftSchedule.startDate;
+    delete shiftSchedule.startTime;
     try {
       await createShiftSchedule(shiftSchedule);
     } catch (e) {
@@ -46,6 +46,9 @@ describe("createShiftSchedule", () => {
   });
   test("return shift schedule if create successfully", async () => {
     const result = await createShiftSchedule(shiftSchedule);
-    expect(result).toEqual(shiftSchedule);
+    const data = await shiftSchedule.getDataForDb();
+    data.startTime = data.startTime.toDate();
+    data.endTime = data.endTime.toDate();
+    expect(result).toEqual({ id: shiftScheduleId, ...data });
   });
 });

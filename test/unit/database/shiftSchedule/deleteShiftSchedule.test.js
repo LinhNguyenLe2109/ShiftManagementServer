@@ -11,7 +11,7 @@ describe("deleteShiftSchedule", () => {
       id: shiftScheduleId,
       archived: false,
       employeeId: uuidv4(),
-      startDate: new Date("2022-12-12T12:00:00"),
+      startTime: new Date("2022-12-12T12:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
     });

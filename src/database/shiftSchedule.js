@@ -11,8 +11,8 @@ const {
 } = require("firebase/firestore");
 const logger = require("../logger");
 const { v4: uuidv4 } = require("uuid");
-const { verifyString } = require("../utils/verifyString");
-const { verifyDate } = require("../utils/verifyDate");
+const verifyString = require("../utils/verifyString");
+const verifyDate = require("../utils/verifyDate");
 const { Timestamp } = require("firebase/firestore");
 const { getShiftInstance } = require("./shiftInstance");
 class ShiftSchedule {
@@ -24,7 +24,7 @@ class ShiftSchedule {
   // @param startTime: Date
   // @param employeeId: string
   constructor({ id, archived, shiftIdList, desc, startTime, employeeId }) {
-    this.id = id ? id : uuidv4();
+    this.id = id && verifyString(id) ? id : uuidv4();
     this.desc = verifyString(desc) ? desc : "";
     // check if the date is valid
     // if it is, set it to the date, if not, check if the date is a string
@@ -44,49 +44,140 @@ class ShiftSchedule {
       throw new Error("Employee ID is required");
     }
     this.archived = archived && typeof archived == "boolean" ? archived : false;
-    this.shifts = shiftIdList && Array.isArray(shiftIdList) ? shiftIdList : [];
+    this.shiftIdList =
+      shiftIdList && Array.isArray(shiftIdList) ? shiftIdList : [];
   }
   addShiftId(shiftId) {
-    this.shifts.push(shiftId);
+    this.shiftIdList.push(shiftId);
   }
   addMultipleShiftIds(shiftIdList) {
-    this.shifts = this.shifts.concat(shiftIdList);
+    this.shiftIdList = this.shiftIdList.concat(shiftIdList);
   }
   removeShiftId(shiftId) {
-    this.shifts = this.shifts.filter((id) => id !== shiftId);
+    this.shiftIdList = this.shiftIdList.filter((id) => id !== shiftId);
   }
   removeMultipleShiftIds(shiftIdList) {
-    this.shifts = this.shifts.filter((id) => !shiftIdList.includes(id));
+    this.shiftIdList = this.shiftIdList.filter(
+      (id) => !shiftIdList.includes(id)
+    );
   }
   getDetailedShifts = async () => {
     let shifts = [];
-    for (let i = 0; i < this.shifts.length; i++) {
-      const shift = await getShiftInstance(this.shifts[i]);
+    for (let i = 0; i < this.shiftIdList.length; i++) {
+      const shift = await getShiftInstance(this.shiftIdList[i]);
       shifts.push(shift);
     }
     return shifts;
+  };
+
+  getDataForDb = () => {
+    return {
+      archived: this.archived,
+      shiftIdList: this.shiftIdList,
+      desc: this.desc,
+      startTime: Timestamp.fromDate(this.startTime),
+      endTime: Timestamp.fromDate(this.endTime),
+      employeeId: this.employeeId,
+    };
   };
 }
 // createShiftSchedule creates a new shift schedule
 // @param shiftSchedule: ShiftSchedule or object
 // @returns ShiftSchedule object
-const createShiftSchedule = async (shiftSchedule) => {};
+const createShiftSchedule = async (shiftSchedule) => {
+  try {
+    const shiftScheduleObj = new ShiftSchedule(shiftSchedule);
+    const shiftScheduleId = shiftScheduleObj.id;
+    const shiftScheduleData = shiftScheduleObj.getDataForDb();
+    if (await getShiftSchedule(shiftScheduleId)) {
+      throw new Error("Shift schedule already exists");
+    }
+    await setDoc(doc(db, "shiftSchedules", shiftScheduleId), shiftScheduleData);
+    return await getShiftSchedule(shiftScheduleId);
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
 
 // getShiftSchedule gets a shift schedule by its id
 // @param shiftScheduleId: string
 // @returns ShiftSchedule object
-const getShiftSchedule = async (shiftScheduleId) => {};
+const getShiftSchedule = async (shiftScheduleId) => {
+  try {
+    const shiftScheduleRef = doc(db, "shiftSchedules", shiftScheduleId);
+    const shiftScheduleSnap = await getDoc(shiftScheduleRef);
+    if (shiftScheduleSnap.exists()) {
+      const shiftScheduleData = shiftScheduleSnap.data();
+      const shiftScheduleId = shiftScheduleSnap.id;
+      shiftScheduleData.startTime = shiftScheduleData.startTime.toDate();
+      shiftScheduleData.endTime = shiftScheduleData.endTime.toDate();
+      return { id: shiftScheduleId, ...shiftScheduleData };
+    }
+    return null;
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
 
 // getShiftScheduleByDate gets a shift schedule by date (startDate >= date <= endDate)
 // @param employeeId: string
 // @param date: Date
 // @returns ShiftSchedule object
-const getShiftSchedulesByDate = async (employeeId, date) => {};
+const getShiftSchedulesByDate = async (employeeId, date) => {
+  try {
+    if (!verifyDate(date)) {
+      throw new Error("Invalid date");
+    }
+    const shiftSchedulesRef = collection(db, "shiftSchedules");
+    const q = query(
+      shiftSchedulesRef,
+      where("employeeId", "==", employeeId),
+      where("startTime", "<=", Timestamp.fromDate(date)),
+      where(
+        "startTime",
+        ">=",
+        Timestamp.fromDate(new Date(date.getTime() - 7 * 24 * 60 * 60 * 1000))
+      )
+    );
+    const shiftSchedulesSnap = await getDocs(q);
+    if (shiftSchedulesSnap.empty) {
+      return null;
+    }
+    const shiftScheduleData = shiftSchedulesSnap.docs[0].data();
+    shiftScheduleData.startTime = shiftScheduleData.startTime.toDate();
+    shiftScheduleData.endTime = shiftScheduleData.endTime.toDate();
+    const shiftScheduleId = shiftSchedulesSnap.docs[0].id;
+    return { id: shiftScheduleId, ...shiftScheduleData };
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
 
 // getShiftSchedules gets all shift schedules for an employee
 // @param employeeId: string
 // @returns Array of ShiftSchedule objects
-const getAllShiftSchedules = async (employeeId) => {};
+const getAllShiftSchedules = async (employeeId) => {
+  try {
+    const shiftSchedulesRef = collection(db, "shiftSchedules");
+    const q = query(shiftSchedulesRef, where("employeeId", "==", employeeId));
+    const shiftSchedulesSnap = await getDocs(q);
+    const shiftSchedules = [];
+    shiftSchedulesSnap.forEach((doc) => {
+      const shiftScheduleData = doc.data();
+      shiftScheduleData.startTime = shiftScheduleData.startTime.toDate();
+      shiftScheduleData.endTime = shiftScheduleData.endTime.toDate();
+      const shiftScheduleId = doc.id;
+      shiftSchedules.push({ id: shiftScheduleId, ...shiftScheduleData });
+    });
+    return shiftSchedules;
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
 
 // updateShiftSchedule updates a shift schedule
 // To remove a shift from the shift schedule, use removeShift key
@@ -98,12 +189,77 @@ const getAllShiftSchedules = async (employeeId) => {};
 const updateShiftSchedule = async (
   shiftScheduleId,
   updatedShiftScheduleData
-) => {};
+) => {
+  try {
+    const shiftScheduleRef = doc(db, "shiftSchedules", shiftScheduleId);
+    const shiftScheduleSnap = await getDoc(shiftScheduleRef);
+    if (!shiftScheduleSnap.exists()) {
+      throw new Error("Shift schedule does not exist");
+    }
+    const shiftScheduleData = shiftScheduleSnap.data();
+    const shiftSchedule = new ShiftSchedule({
+      id: shiftScheduleId,
+      archived: shiftScheduleData.archived,
+      shiftIdList: shiftScheduleData.shiftIdList,
+      desc: shiftScheduleData.desc,
+      startTime: shiftScheduleData.startTime.toDate(),
+      employeeId: shiftScheduleData.employeeId,
+    });
+    if (updatedShiftScheduleData.hasOwnProperty("removeShift")) {
+      shiftSchedule.removeShiftId(updatedShiftScheduleData.removeShift);
+    }
+    if (updatedShiftScheduleData.hasOwnProperty("removeMultipleShifts")) {
+      shiftSchedule.removeMultipleShiftIds(
+        updatedShiftScheduleData.removeMultipleShifts
+      );
+    }
+    if (updatedShiftScheduleData.hasOwnProperty("addShift")) {
+      shiftSchedule.addShiftId(updatedShiftScheduleData.addShift);
+    }
+    if (updatedShiftScheduleData.hasOwnProperty("addMultipleShifts")) {
+      shiftSchedule.addMultipleShiftIds(
+        updatedShiftScheduleData.addMultipleShifts
+      );
+    }
+
+    if (updatedShiftScheduleData.hasOwnProperty("desc")) {
+      shiftSchedule.desc = updatedShiftScheduleData.desc;
+    }
+    if (updatedShiftScheduleData.hasOwnProperty("startTime")) {
+      shiftSchedule.startTime = updatedShiftScheduleData.startTime;
+      shiftSchedule.endTime = new Date(
+        shiftSchedule.startTime.getTime() + 7 * 24 * 60 * 60 * 1000
+      );
+    }
+
+    if (updatedShiftScheduleData.hasOwnProperty("archived")) {
+      shiftSchedule.archived = updatedShiftScheduleData.archived;
+    }
+    const updatedShiftSchedule = shiftSchedule.getDataForDb();
+    await setDoc(shiftScheduleRef, updatedShiftSchedule);
+    return await getShiftSchedule(shiftScheduleId);
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
 
 // deleteShiftSchedule deletes a shift schedule
 // @param shiftScheduleId: string
 // @returns boolean
-const deleteShiftSchedule = async (shiftScheduleId) => {};
+const deleteShiftSchedule = async (shiftScheduleId) => {
+  try {
+    if (!(await getShiftSchedule(shiftScheduleId))) {
+      return false;
+    }
+    const shiftScheduleRef = doc(db, "shiftSchedules", shiftScheduleId);
+    await deleteDoc(shiftScheduleRef);
+    return true;
+  } catch (e) {
+    logger.error(e);
+    return false;
+  }
+};
 
 module.exports = {
   createShiftSchedule,

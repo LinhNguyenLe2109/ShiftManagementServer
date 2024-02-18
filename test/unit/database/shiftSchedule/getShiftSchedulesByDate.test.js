@@ -19,7 +19,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId1,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-12T12:00:00"),
+      startTime: new Date("2022-12-12T12:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
     });
@@ -27,7 +27,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId2,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-20T12:00:00"),
+      startTime: new Date("2022-12-20T12:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
     });
@@ -35,7 +35,7 @@ describe("getShiftSchedulesByDate", () => {
       id: shiftScheduleId3,
       archived: false,
       employeeId: employeeId,
-      startDate: new Date("2022-12-28T12:00:00"),
+      startTime: new Date("2022-12-28T12:00:00"),
       shiftIdList: [uuidv4(), uuidv4()],
       desc: "Test Shift Schedule Description",
     });
@@ -55,7 +55,10 @@ describe("getShiftSchedulesByDate", () => {
       employeeId,
       new Date("2022-12-22T12:00:00")
     );
-    expect(result).toEqual(shiftSchedule2);
+    const shiftScheduleData2 = shiftSchedule2.getDataForDb();
+    shiftScheduleData2.startTime = shiftScheduleData2.startTime.toDate();
+    shiftScheduleData2.endTime = shiftScheduleData2.endTime.toDate();
+    expect(result).toEqual({ id: shiftScheduleId2, ...shiftScheduleData2 });
   });
 
   test("throw error if date is invalid", async () => {
