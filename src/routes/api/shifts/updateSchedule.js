@@ -1,5 +1,6 @@
 const logger = require("../../../logger");
 const { createShiftInstance, deleteShiftInstance, softUpdateShiftInstance, ShiftInstance } = require("../../../database/shiftInstance");
+const { Manager, updateManager } = require("../../../database/manager");
 
 const updateSchedule = async (req, res) => {
   try {
@@ -42,7 +43,7 @@ const updateSchedule = async (req, res) => {
       }
     }
     for (const deletedShiftId of req.body.deletedShifts) {
-      await deleteShiftInstance(deletedShiftId);
+      await deleteShiftInstance(deletedShiftId, Manager, updateManager);
     }
     for (const editedShift of req.body.editedShifts) {
       editedShift.startTime = new Date(editedShift.startTime);
