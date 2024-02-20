@@ -2,6 +2,7 @@ const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const { getUserInfo } = require("../database/users");
+const { getShiftInstance, deleteShiftInstance } = require("../database/shiftInstance");
 const {
   getCategory,
   deleteAllCategoriesForManager,
@@ -10,6 +11,11 @@ const {
   removeCategoryForAllEmployeesUnderManager,
 } = require("../database/employee");
 
+const {
+  getShiftInstance,
+  deleteShiftInstance,
+} = require("../database/shiftInstance");
+
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {
     this.id = id;
@@ -17,7 +23,14 @@ class Manager {
     this.categoryList = categoryList ? categoryList : [];
     this.unassignedShifts = unassignedShifts ? unassignedShifts : [];
   }
-  
+  getDataForDB() {
+    return {
+      id: this.id,
+      employeeList: this.employeeList,
+      categoryList: this.categoryList,
+      unassignedShifts: this.unassignedShifts
+    };
+  }
   getEmployeeList = async () => {
     let employees = [];
     for (let i = 0; i < this.employeeList.length; i++) {
@@ -85,20 +98,41 @@ class Manager {
   };
 
   getUnassignedShifts = async () => {
-    // TODO: fetch unassigned shifts from the database
-    return this.unassignedShifts;
+    let shifts = [];
+    for (let i = 0; i < this.unassignedShifts.length; i++) {
+      const shift = await getShiftInstance(this.unassignedShifts[i]);
+      shifts.push(shift);
+    }
+    return shifts;
   };
 
-  addUnassignedShift = async (shiftId) => {
-    this.unassignedShifts.push(shiftId);
+  // @param shiftId: string
+  // @param categoryId: array
+  addUnassignedShift = async ({ shiftId, categoryList }) => {
+    this.unassignedShifts.push({ shiftId, categoryList });
   };
 
-  addMultipleUnassignedShifts = async (shiftIds) => {
-    this.unassignedShifts = this.unassignedShifts.concat(shiftIds);
+  addMultipleUnassignedShifts = async (unassignedShiftList) => {
+    for (let i = 0; i < unassignedShiftList.length; i++) {
+      if (
+        unassignedShiftList[i].hasOwnProperty("shiftId") &&
+        unassignedShiftList[i].shiftId === undefined
+      ) {
+        throw new Error("Shift ID is required");
+      }
+      if (
+        unassignedShiftList[i].hasOwnProperty("categoryList") &&
+        unassignedShiftList[i].categoryList === undefined
+      ) {
+        throw new Error("Category List is required");
+      }
+    }
+    this.unassignedShifts = this.unassignedShifts.concat(unassignedShiftList);
   };
 
   removeUnassignedShift = async (shiftId) => {
-    const index = this.unassignedShifts.indexOf(shiftId);
+
+    const index = this.unassignedShifts.map(e => e.id).indexOf(shiftId);
     if (index > -1) {
       this.unassignedShifts.splice(index, 1);
     }
@@ -106,9 +140,11 @@ class Manager {
 
   removeMultipleUnassignedShifts = async (shiftIds) => {
     for (let i = 0; i < shiftIds.length; i++) {
-      const index = this.unassignedShifts.indexOf(shiftIds[i]);
-      if (index > -1) {
-        this.unassignedShifts.splice(index, 1);
+      for (let j = 0; j < this.unassignedShifts.length; j++) {
+        if (this.unassignedShifts[j].shiftId === shiftIds[i]) {
+          this.unassignedShifts.splice(j, 1);
+          break;
+        }
       }
     }
   };
@@ -123,15 +159,6 @@ class Manager {
       employees,
       categories,
       unassignedShifts,
-    };
-  };
-
-  async getData() {
-    return {
-      id: this.id,
-      employeeList: this.employeeList,
-      categoryList: this.categoryList,
-      unassignedShifts: this.unassignedShifts
     };
   };
 }
@@ -163,7 +190,6 @@ const getManager = async (managerId) => {
       const id = docSnap.id;
       const data = docSnap.data();
       const manager = new Manager({ id, ...data });
-      //logger.info("Manager found");
       return manager.getDetailedManagerInfo();
     } else {
       return null;
@@ -190,19 +216,9 @@ const getManager = async (managerId) => {
 // @param employeeId: string
 // @param updatedEmployee: object
 const updateManager = async (managerId, managerUpdatedData) => {
-  try {
-    managerUpdatedData.id = managerId;
-    
-    // Does not return a Manager class so the functions do not work
-    // (See getManagerReturn)
-    const unformattedManager = await getManager(managerId);
-    //convert categories to only id
-    const updatedCategories = unformattedManager.categories.map(category => typeof category === 'object' ? category.id : category);
+  managerUpdatedData.id = managerId;
 
-    // Update the object with the new categories array
-    const manager = { ...unformattedManager, categories: updatedCategories };
-    logger.debug("Fixed categories: " + JSON.stringify(manager));
-
+  const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
     manager.addEmployee(managerUpdatedData.addEmployee);
@@ -219,8 +235,7 @@ const updateManager = async (managerId, managerUpdatedData) => {
 
   // Update category list
   if (managerUpdatedData.hasOwnProperty("addCategory")) {
-    manager.categories.push(managerUpdatedData.addCategory);
-    //manager.addCategory(managerUpdatedData.addCategory);
+    manager.addCategory(managerUpdatedData.addCategory);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleCategories")) {
     manager.addMultipleCategories(managerUpdatedData.addMultipleCategories);
@@ -252,27 +267,13 @@ const updateManager = async (managerId, managerUpdatedData) => {
     );
   }
   try {
-    // Creates the same response as getData() but with updated values
-    const updatedManager = {id: manager.id,
-      employeeList: manager.employees ? manager.employees : [],
-      categoryList: manager.categories ? manager.categories : [],
-      unassignedShifts: manager.unassignedShifts ? manager.unassignedShifts : []}
-    //
-    logger.debug("Updated: " + JSON.stringify(updatedManager));
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, updatedManager);
-    logger.info(`Updated manager:` + JSON.stringify(manager));
+    await setDoc(docRef, await manager.getDataForDB());
     return manager;
   } catch (e) {
     logger.error(`Error updating manager: ${e}`);
     throw e;
   }
-  } catch (e) {
-    logger.error(`Error updating manager: ${e}`);
-    throw e;
-  }
-
-  
 };
 
 // delete a manager
@@ -294,7 +295,10 @@ const deleteManager = async (managerId) => {
     removeCategoryForAllEmployeesUnderManager(managerId);
     // Delete all category for a manager
     await deleteAllCategoriesForManager(managerId);
-    // TODO: delete all unassigned shifts
+    // delete all unassigned shifts
+    for (let i = 0; i < manager.unassignedShifts.length; i++) {
+      await deleteShiftInstance(manager.unassignedShifts[i].shiftId);
+    }
     const docRef = doc(db, "managers", managerId);
     await deleteDoc(docRef);
     logger.info(`Manager deleted with ID: ${managerId}`);
