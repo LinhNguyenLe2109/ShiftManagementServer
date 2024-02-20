@@ -27,6 +27,7 @@ class Manager {
     return {
       id: this.id,
       employeeList: this.employeeList,
+      categoryList: this.categoryList,
       unassignedShifts: this.unassignedShifts
     };
   }

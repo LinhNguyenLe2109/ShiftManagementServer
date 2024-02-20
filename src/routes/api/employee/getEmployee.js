@@ -1,4 +1,4 @@
-const { getEmployee } = require('./employee');
+const { getEmployee } = require('../../../database/employee');
 const logger = require('../../../logger');
 
 const getEmployeeById = async (req, res) => {
