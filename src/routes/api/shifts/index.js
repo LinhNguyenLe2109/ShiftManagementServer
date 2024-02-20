@@ -6,7 +6,7 @@ const authenticateJWT = require("../../../middleware/auth");
 router.get("/get/:shiftId", authenticateJWT, require("./getShift"));
 router.post("/getRange", authenticateJWT, require("./getShifts"));
 router.post("/create", authenticateJWT, require("./createShift"));
-router.delete("/delete", authenticateJWT, require("./deleteShift"));
+router.delete("/delete/:shiftId", authenticateJWT, require("./deleteShift"));
 router.put("/update", authenticateJWT, require("./updateShift"));
 
 module.exports = router;
