@@ -1,4 +1,4 @@
-const { updateEmployee } = require('./employee');
+const { updateEmployee } = require('../../../database/employee');
 const logger = require('../../../logger');
 
 const updateEmployeeById = async (req, res) => {

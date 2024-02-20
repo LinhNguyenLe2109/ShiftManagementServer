@@ -14,6 +14,15 @@ router.post("/login", require("./authenticateUser"));
 // POST /user/register
 router.post("/register", authenticateJWT, authenticateAccessLevel(["2"]), require("./createNewUser"));
 
+// POST /user/notification
+router.post("/notification", authenticateJWT, require("./createNotification"));
+// Example body:
+// {
+//     "createdBy": "",
+//     "title": "",
+//     "content": ""
+// }
+
 // PUT /user
 router.put("/", authenticateJWT, require("./updateUser"));
 module.exports = router;

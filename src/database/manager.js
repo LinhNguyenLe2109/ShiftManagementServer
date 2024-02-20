@@ -17,6 +17,7 @@ class Manager {
     this.categoryList = categoryList ? categoryList : [];
     this.unassignedShifts = unassignedShifts ? unassignedShifts : [];
   }
+  
   getEmployeeList = async () => {
     let employees = [];
     for (let i = 0; i < this.employeeList.length; i++) {
@@ -124,6 +125,15 @@ class Manager {
       unassignedShifts,
     };
   };
+
+  async getData() {
+    return {
+      id: this.id,
+      employeeList: this.employeeList,
+      categoryList: this.categoryList,
+      unassignedShifts: this.unassignedShifts
+    };
+  };
 }
 
 const createManager = async (managerId) => {
@@ -153,6 +163,7 @@ const getManager = async (managerId) => {
       const id = docSnap.id;
       const data = docSnap.data();
       const manager = new Manager({ id, ...data });
+      //logger.info("Manager found");
       return manager.getDetailedManagerInfo();
     } else {
       return null;
@@ -179,9 +190,19 @@ const getManager = async (managerId) => {
 // @param employeeId: string
 // @param updatedEmployee: object
 const updateManager = async (managerId, managerUpdatedData) => {
-  managerUpdatedData.id = managerId;
+  try {
+    managerUpdatedData.id = managerId;
+    
+    // Does not return a Manager class so the functions do not work
+    // (See getManagerReturn)
+    const unformattedManager = await getManager(managerId);
+    //convert categories to only id
+    const updatedCategories = unformattedManager.categories.map(category => typeof category === 'object' ? category.id : category);
 
-  const manager = await getManager(managerId);
+    // Update the object with the new categories array
+    const manager = { ...unformattedManager, categories: updatedCategories };
+    logger.debug("Fixed categories: " + JSON.stringify(manager));
+
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
     manager.addEmployee(managerUpdatedData.addEmployee);
@@ -198,7 +219,8 @@ const updateManager = async (managerId, managerUpdatedData) => {
 
   // Update category list
   if (managerUpdatedData.hasOwnProperty("addCategory")) {
-    manager.addCategory(managerUpdatedData.addCategory);
+    manager.categories.push(managerUpdatedData.addCategory);
+    //manager.addCategory(managerUpdatedData.addCategory);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleCategories")) {
     manager.addMultipleCategories(managerUpdatedData.addMultipleCategories);
@@ -230,13 +252,27 @@ const updateManager = async (managerId, managerUpdatedData) => {
     );
   }
   try {
+    // Creates the same response as getData() but with updated values
+    const updatedManager = {id: manager.id,
+      employeeList: manager.employees ? manager.employees : [],
+      categoryList: manager.categories ? manager.categories : [],
+      unassignedShifts: manager.unassignedShifts ? manager.unassignedShifts : []}
+    //
+    logger.debug("Updated: " + JSON.stringify(updatedManager));
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, manager);
+    await setDoc(docRef, updatedManager);
+    logger.info(`Updated manager:` + JSON.stringify(manager));
     return manager;
   } catch (e) {
     logger.error(`Error updating manager: ${e}`);
     throw e;
   }
+  } catch (e) {
+    logger.error(`Error updating manager: ${e}`);
+    throw e;
+  }
+
+  
 };
 
 // delete a manager

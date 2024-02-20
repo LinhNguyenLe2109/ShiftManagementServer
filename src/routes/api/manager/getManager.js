@@ -1,4 +1,5 @@
-const { getManager } = require("../manager");
+const { getManager } = require("../../../database/manager");
+const logger = require("../../../logger");
 
 const getManagerDetails = async (req, res) => {
   try {

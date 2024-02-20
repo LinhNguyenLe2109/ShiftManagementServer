@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getCategory } = require("../category");
+const { getCategory } = require("../../../database/category");
+const logger = require("../../../logger");
 
 const getCategoryHandler = async (req, res) => {
   try {

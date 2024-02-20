@@ -1,4 +1,4 @@
-const { deleteManager } = require("../manager");
+const { deleteManager } = require("../../../database/manager");
 
 const deleteManagerById = async (req, res) => {
   try {

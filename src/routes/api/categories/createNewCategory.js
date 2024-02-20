@@ -1,12 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { createCategory } = require("../category");
+const logger = require("../../../logger");
+const { Category, createCategory } = require("../../../database/category");
+const { v4: uuidv4 } = require("uuid");
 
 const createNewCategory = async (req, res) => {
   try {
     logger.info("createCategory function called");
-    const categoryData = req.body;
-    const newCategory = await createCategory(categoryData);
+    categoryObj = new Category({
+      id: uuidv4(),
+      name: req.body.name ? req.body.name : "",
+      description: req.body.description ? req.body.description : "",
+      createdBy: req.body.managerId
+    });
+    
+    const newCategory = await createCategory(categoryObj);
     res.status(200).json(newCategory);
   } catch (error) {
     logger.error(`Error in createCategory: ${error}`);
