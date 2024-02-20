@@ -9,7 +9,7 @@ const getShift = async (req, res) => {
     return res.status(200).json(shiftInstance);
   } catch (e) {
     logger.error(`Error in getShift: ${e}`);
-    return res.status(500).send("Error in getShift");
+    return res.status(500).json({ error: "Error in getShift" });
   }
 };
 
