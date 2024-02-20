@@ -49,9 +49,12 @@ class Admin {
 }
 
 const createAdmin = async (adminId) => {
-  const admin = new Admin({ id: adminId });
   try {
-    await setDoc(doc(db, "admin", admin.id), admin);
+    await setDoc(doc(db, "admin", adminId), {
+      id: adminId,
+      managerList: [],
+    });
+    const admin = new Admin({ id: adminId });
     return admin;
   } catch (e) {
     logger.error("Error creating admin: " + e);

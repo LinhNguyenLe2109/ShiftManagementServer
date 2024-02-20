@@ -2,6 +2,7 @@ const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
 const { getUserInfo } = require("../database/users");
+const { getShiftInstance, deleteShiftInstance } = require("../database/shiftInstance");
 const {
   getCategory,
   deleteAllCategoriesForManager,
@@ -21,6 +22,13 @@ class Manager {
     this.employeeList = employeeList ? employeeList : [];
     this.categoryList = categoryList ? categoryList : [];
     this.unassignedShifts = unassignedShifts ? unassignedShifts : [];
+  }
+  getDataForDB() {
+    return {
+      id: this.id,
+      employeeList: this.employeeList,
+      unassignedShifts: this.unassignedShifts
+    };
   }
   getEmployeeList = async () => {
     let employees = [];
@@ -122,11 +130,10 @@ class Manager {
   };
 
   removeUnassignedShift = async (shiftId) => {
-    for (let i = 0; i < this.unassignedShifts.length; i++) {
-      if (this.unassignedShifts[i].shiftId === shiftId) {
-        this.unassignedShifts.splice(i, 1);
-        break;
-      }
+
+    const index = this.unassignedShifts.map(e => e.id).indexOf(shiftId);
+    if (index > -1) {
+      this.unassignedShifts.splice(index, 1);
     }
   };
 
@@ -156,13 +163,17 @@ class Manager {
 }
 
 const createManager = async (managerId) => {
-  const manager = new Manager({ id: managerId });
   try {
-    if (getManager(managerId)) {
+    if (await getManager(managerId)) {
       return false;
     }
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, manager);
+    await setDoc(docRef, {
+      id: managerId,
+      employeeList: [],
+      categoryList: [],
+      unassignedShifts: [],
+    });
     return true;
   } catch (e) {
     logger.error(`Error creating manager: ${e}`);
@@ -206,7 +217,7 @@ const getManager = async (managerId) => {
 const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
 
-  const manager = await getManager(managerId);
+  const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
     manager.addEmployee(managerUpdatedData.addEmployee);
@@ -256,7 +267,7 @@ const updateManager = async (managerId, managerUpdatedData) => {
   }
   try {
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, manager);
+    await setDoc(docRef, await manager.getDataForDB());
     return manager;
   } catch (e) {
     logger.error(`Error updating manager: ${e}`);

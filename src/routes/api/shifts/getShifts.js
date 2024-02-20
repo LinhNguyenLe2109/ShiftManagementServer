@@ -6,7 +6,7 @@ const logger = require("../../../logger");
 const getShifts = async (req, res) => {
   //req.body
   try {
-    logger.info("getShiftsRange called");
+    logger.info("getShifts called");
     logger.debug(req.body);
     if (!req.body.endTime || !req.body.startTime || !req.body.employeeId) {
       return res

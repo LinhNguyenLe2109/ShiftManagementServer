@@ -24,6 +24,7 @@ const authenticateUser = async (req, res) => {
     }
   } catch (err) {
     logger.error(err);
+    res.status(401).send("Invalid credentials");
   }
 };
 
