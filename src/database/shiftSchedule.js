@@ -128,8 +128,10 @@ const getShiftSchedule = async (shiftScheduleId) => {
 const getShiftSchedulesByDate = async (employeeId, date) => {
   try {
     if (!verifyDate(date)) {
+      logger.info(date);
       throw new Error("Invalid date");
     }
+    date = new Date(date);
     const shiftSchedulesRef = collection(db, "shiftSchedules");
     const q = query(
       shiftSchedulesRef,

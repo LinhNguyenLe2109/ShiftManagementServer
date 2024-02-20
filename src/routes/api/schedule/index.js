@@ -9,7 +9,7 @@ router.get(
   authenticateJWT,
   require("./getAllSchedules")
 );
-router.get("/getByDate", authenticateJWT, require("./getScheduleByDate"));
+router.post("/getByDate", authenticateJWT, require("./getScheduleByDate"));
 router.post("/create", authenticateJWT, require("./createSchedule"));
 router.delete("/delete", authenticateJWT, require("./deleteSchedule"));
 router.put("/update", authenticateJWT, require("./updateSchedule"));
