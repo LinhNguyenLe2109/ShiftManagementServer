@@ -12,6 +12,6 @@ router.put("/update", authenticateJWT, require("./updateShift"));
 router.post("/getUnassignedShifts", authenticateJWT, authenticateAccessLevel(["1"]), require("./getUnassignedShifts"));
 
 // why is there a schedule route here?
-router.post("/updateSchedule", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateSchedule"));
+// router.post("/updateSchedule", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateSchedule"));
 
 module.exports = router;
