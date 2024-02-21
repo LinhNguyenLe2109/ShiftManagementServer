@@ -18,19 +18,18 @@ const createNewUser = async (req, res) => {
     const user = await signup(email, password);
     if (user) {
       //const idToken = await getIdToken(user);
-      userObj = new User({
+      userObj = {
         id: user.uid,
         email: user.email,
         firstName,
         lastName,
         accessLevel,
-        reportTo,
         active,
-      });
+        reportTo,
+      };
       logger.debug("User created" + JSON.stringify(userObj));
-      await createUser(userObj);
-      //res.status(200).json({ token: idToken });
-      res.status(200).json("User created");
+      const userData = await createUser(userObj);
+      res.status(200).json({ ...userData });
     } else {
       res.status(401).send("Invalid credentials");
     }

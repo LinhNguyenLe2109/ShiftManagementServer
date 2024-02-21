@@ -58,7 +58,7 @@ const getCategory = async (categoryId) => {
     const docRef = doc(db, "categories", categoryId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(`Category data: ${docSnap.data()}`);
+      logger.info(docSnap.data());
       const id = docSnap.id;
       const data = docSnap.data();
       return { id, ...data };

@@ -1,15 +1,19 @@
 const { db } = require("../database/firebase.config");
 const { doc, setDoc, getDoc } = require("firebase/firestore");
 const logger = require("../logger");
-const { getUserInfo } = require("../database/users");
-const { getShiftInstance, deleteShiftInstance } = require("../database/shiftInstance");
+const {
+  getShiftInstance,
+  deleteShiftInstance,
+} = require("../database/shiftInstance");
 const {
   getCategory,
   deleteAllCategoriesForManager,
 } = require("../database/category");
 const {
-  removeCategoryForAllEmployeesUnderManager, getEmployee,
+  removeCategoryForAllEmployeesUnderManager,
+  getEmployee,
 } = require("../database/employee");
+const { getUserInfo, createUser } = require("../database/users");
 
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {
@@ -23,14 +27,14 @@ class Manager {
       id: this.id,
       employeeList: this.employeeList,
       categoryList: this.categoryList,
-      unassignedShifts: this.unassignedShifts
+      unassignedShifts: this.unassignedShifts,
     };
   }
   getEmployeeList = async () => {
     logger.debug("Inside getEmployeeList");
     let employees = [];
     for (let i = 0; i < this.employeeList.length; i++) {
-      const employee = await getEmployee(this.employeeList[i]);
+      const employee = await getUserInfo(this.employeeList[i]);
       employees.push(employee);
     }
     return employees;
@@ -128,8 +132,7 @@ class Manager {
   };
 
   removeUnassignedShift = async (shiftId) => {
-
-    const index = this.unassignedShifts.map(e => e.id).indexOf(shiftId);
+    const index = this.unassignedShifts.map((e) => e.id).indexOf(shiftId);
     if (index > -1) {
       this.unassignedShifts.splice(index, 1);
     }
@@ -150,7 +153,7 @@ class Manager {
     const id = this.id;
     const categories = await this.getCategoryList();
     const employees = await this.getEmployeeList();
-    
+
     const unassignedShifts = await this.getUnassignedShifts();
     return {
       id,
@@ -188,7 +191,9 @@ const getManager = async (managerId) => {
       const id = docSnap.id;
       const data = docSnap.data();
       const manager = new Manager({ id, ...data });
-      return manager.getDetailedManagerInfo();
+      return manager;
+      // somehow return this causes the functions to not work, need further investigation
+      // return manager.getDetailedManagerInfo();
     } else {
       return null;
     }
@@ -215,32 +220,35 @@ const getManager = async (managerId) => {
 // @param updatedEmployee: object
 const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
-    
-    // Does not return a Manager class so the functions do not work
-    // (See getManagerReturn)
-    const unformattedManager = await getManager(managerId);
-    // Convert categories to only ids
-    let updatedCategories = [];
-    if (unformattedManager.categories && unformattedManager.categories.length > 0) {
-      updatedCategories = unformattedManager.categories.map(category => {
-        return typeof category === 'object' ? category.id : category;
-      });
-    }
-    // Convert employees to only ids
-    let updatedEmployees = [];
-    if (unformattedManager.employees && unformattedManager.employees.length > 0) {
-      updatedEmployees = unformattedManager.employees.map(employee => {
-        return typeof employee === 'object' ? employee.id : employee;
-      });
-    }
 
-    // Update the object with the new categories and employees arrays
-    const manager = {
-      ...unformattedManager,
-      categories: updatedCategories,
-      employees: updatedEmployees
-    };
-    logger.debug("Fixed categories: " + JSON.stringify(manager));
+  // Does not return a Manager class so the functions do not work
+  // (See getManagerReturn)
+  const unformattedManager = await getManager(managerId);
+  // Convert categories to only ids
+  let updatedCategories = [];
+  if (
+    unformattedManager.categories &&
+    unformattedManager.categories.length > 0
+  ) {
+    updatedCategories = unformattedManager.categories.map((category) => {
+      return typeof category === "object" ? category.id : category;
+    });
+  }
+  // Convert employees to only ids
+  let updatedEmployees = [];
+  if (unformattedManager.employees && unformattedManager.employees.length > 0) {
+    updatedEmployees = unformattedManager.employees.map((employee) => {
+      return typeof employee === "object" ? employee.id : employee;
+    });
+  }
+
+  // Update the object with the new categories and employees arrays
+  const manager = {
+    ...unformattedManager,
+    categories: updatedCategories,
+    employees: updatedEmployees,
+  };
+  logger.debug("Fixed categories: " + JSON.stringify(manager));
 
   //const manager = new Manager(await getManager(managerId));
   // Update employee list
@@ -294,17 +302,21 @@ const updateManager = async (managerId, managerUpdatedData) => {
   }
   try {
     // Creates the same response as getDataForDB() but with updated values
-    const updatedManager = {id: manager.id,
+    const updatedManager = {
+      id: manager.id,
       employeeList: manager.employees ? manager.employees : [],
       categoryList: manager.categories ? manager.categories : [],
-      unassignedShifts: manager.unassignedShifts ? manager.unassignedShifts : []}
+      unassignedShifts: manager.unassignedShifts
+        ? manager.unassignedShifts
+        : [],
+    };
     //
     logger.debug("Updated: " + JSON.stringify(updatedManager));
     const docRef = doc(db, "managers", managerId);
     await setDoc(docRef, updatedManager);
     logger.info(`Updated manager:` + JSON.stringify(manager));
     return manager;
-    } catch (e) {
+  } catch (e) {
     logger.error(`Error updating manager: ${e}`);
     throw e;
   }

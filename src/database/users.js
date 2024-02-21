@@ -38,8 +38,10 @@ class User {
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
     logger.debug("accessLevel inside User constructor: " + accessLevel);
     this.accessLevel =
-      accessLevel !== undefined && typeof accessLevel == "number" ? accessLevel : -1;
-      logger.debug("accessLevel after definition: " + this.accessLevel);
+      accessLevel !== undefined && typeof accessLevel == "number"
+        ? accessLevel
+        : -1;
+    logger.debug("accessLevel after definition: " + this.accessLevel);
     this.accountInfo = verifyString(accountInfo) ? accountInfo : uuidv4();
     this.notificationList = Array.isArray(notificationList)
       ? notificationList
@@ -86,18 +88,18 @@ const createUser = async (user) => {
       userObj.getDataForDB()
     );
     if (userObj.accessLevel == 2) {
-      await createAdmin(userId);
+      await createAdmin(userObj.accountInfo);
     }
     if (userObj.accessLevel == 1) {
-      await createManager(userId);
+      await createManager(userObj.accountInfo);
     }
     if (userObj.accessLevel == 0) {
-      await createEmployee(userId);
+      await createEmployee(userObj.accountInfo, user.reportTo);
     }
-    return true;
+    return { success: true, user: await getUserInfo(userId) };
   } catch (e) {
     logger.error(`Error creating user: ${e}`);
-    return false;
+    return { success: false, error: e };
   }
 };
 
@@ -116,13 +118,13 @@ const getUserInfo = async (userId) => {
       const data = docSnap.data();
       data.createdOn = data.createdOn.toDate();
       if (data.accessLevel == 2) {
-        data.accountInfo = await getAdmin(userId);
+        data.accountInfo = await getAdmin(data.accountInfo);
       }
       if (data.accessLevel == 1) {
-        data.accountInfo = await getManager(userId);
+        data.accountInfo = await getManager(data.accountInfo);
       }
       if (data.accessLevel == 0) {
-        data.accountInfo = await getEmployee(userId);
+        data.accountInfo = await getEmployee(data.accountInfo);
       }
       return { id, ...data };
     } else {
