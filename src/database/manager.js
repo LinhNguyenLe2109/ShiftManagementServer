@@ -11,11 +11,6 @@ const {
   removeCategoryForAllEmployeesUnderManager,
 } = require("../database/employee");
 
-const {
-  getShiftInstance,
-  deleteShiftInstance,
-} = require("../database/shiftInstance");
-
 class Manager {
   constructor({ id, employeeList, categoryList, unassignedShifts }) {
     this.id = id;
@@ -217,8 +212,18 @@ const getManager = async (managerId) => {
 // @param updatedEmployee: object
 const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
+    
+    // Does not return a Manager class so the functions do not work
+    // (See getManagerReturn)
+    const unformattedManager = await getManager(managerId);
+    //convert categories to only id
+    const updatedCategories = unformattedManager.categories.map(category => typeof category === 'object' ? category.id : category);
 
-  const manager = new Manager(await getManager(managerId));
+    // Update the object with the new categories array
+    const manager = { ...unformattedManager, categories: updatedCategories };
+    logger.debug("Fixed categories: " + JSON.stringify(manager));
+
+  //const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
     manager.addEmployee(managerUpdatedData.addEmployee);
@@ -235,7 +240,8 @@ const updateManager = async (managerId, managerUpdatedData) => {
 
   // Update category list
   if (managerUpdatedData.hasOwnProperty("addCategory")) {
-    manager.addCategory(managerUpdatedData.addCategory);
+    manager.categories.push(managerUpdatedData.addCategory);
+    //manager.addCategory(managerUpdatedData.addCategory);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleCategories")) {
     manager.addMultipleCategories(managerUpdatedData.addMultipleCategories);
@@ -267,10 +273,18 @@ const updateManager = async (managerId, managerUpdatedData) => {
     );
   }
   try {
+    // Creates the same response as getDataForDB() but with updated values
+    const updatedManager = {id: manager.id,
+      employeeList: manager.employees ? manager.employees : [],
+      categoryList: manager.categories ? manager.categories : [],
+      unassignedShifts: manager.unassignedShifts ? manager.unassignedShifts : []}
+    //
+    logger.debug("Updated: " + JSON.stringify(updatedManager));
     const docRef = doc(db, "managers", managerId);
-    await setDoc(docRef, await manager.getDataForDB());
+    await setDoc(docRef, updatedManager);
+    logger.info(`Updated manager:` + JSON.stringify(manager));
     return manager;
-  } catch (e) {
+    } catch (e) {
     logger.error(`Error updating manager: ${e}`);
     throw e;
   }
