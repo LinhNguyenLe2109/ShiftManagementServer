@@ -8,7 +8,7 @@ const {
   deleteAllCategoriesForManager,
 } = require("../database/category");
 const {
-  removeCategoryForAllEmployeesUnderManager,
+  removeCategoryForAllEmployeesUnderManager, getEmployee,
 } = require("../database/employee");
 
 class Manager {
@@ -27,9 +27,10 @@ class Manager {
     };
   }
   getEmployeeList = async () => {
+    logger.debug("Inside getEmployeeList");
     let employees = [];
     for (let i = 0; i < this.employeeList.length; i++) {
-      const employee = await getUserInfo(this.employeeList[i]);
+      const employee = await getEmployee(this.employeeList[i]);
       employees.push(employee);
     }
     return employees;
@@ -60,6 +61,7 @@ class Manager {
   };
 
   getCategoryList = async () => {
+    logger.debug("Inside getCategoryList");
     let categories = [];
     for (let i = 0; i < this.categoryList.length; i++) {
       const category = await getCategory(this.categoryList[i]);
@@ -146,8 +148,9 @@ class Manager {
 
   getDetailedManagerInfo = async () => {
     const id = this.id;
-    const employees = await this.getEmployeeList();
     const categories = await this.getCategoryList();
+    const employees = await this.getEmployeeList();
+    
     const unassignedShifts = await this.getUnassignedShifts();
     return {
       id,
@@ -216,17 +219,34 @@ const updateManager = async (managerId, managerUpdatedData) => {
     // Does not return a Manager class so the functions do not work
     // (See getManagerReturn)
     const unformattedManager = await getManager(managerId);
-    //convert categories to only id
-    const updatedCategories = unformattedManager.categories.map(category => typeof category === 'object' ? category.id : category);
+    // Convert categories to only ids
+    let updatedCategories = [];
+    if (unformattedManager.categories && unformattedManager.categories.length > 0) {
+      updatedCategories = unformattedManager.categories.map(category => {
+        return typeof category === 'object' ? category.id : category;
+      });
+    }
+    // Convert employees to only ids
+    let updatedEmployees = [];
+    if (unformattedManager.employees && unformattedManager.employees.length > 0) {
+      updatedEmployees = unformattedManager.employees.map(employee => {
+        return typeof employee === 'object' ? employee.id : employee;
+      });
+    }
 
-    // Update the object with the new categories array
-    const manager = { ...unformattedManager, categories: updatedCategories };
+    // Update the object with the new categories and employees arrays
+    const manager = {
+      ...unformattedManager,
+      categories: updatedCategories,
+      employees: updatedEmployees
+    };
     logger.debug("Fixed categories: " + JSON.stringify(manager));
 
   //const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
-    manager.addEmployee(managerUpdatedData.addEmployee);
+    manager.employees.push(managerUpdatedData.addEmployee);
+    //manager.addEmployee(managerUpdatedData.addEmployee);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleEmployees")) {
     manager.addMultipleEmployees(managerUpdatedData.addMultipleEmployees);

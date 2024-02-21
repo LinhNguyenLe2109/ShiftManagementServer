@@ -29,8 +29,10 @@ const createNewEmployee = async (req, res) => {
         reportTo,
         active,
       });
-      logger.debug(userObj);
+      logger.debug("UserObj for employee" + JSON.stringify(userObj));
       const employee = await createEmployee(userObj.id, managerId);
+      // This route should be called right after creation (Update later or it will be on front end)
+      // /manager/addEmployee
       logger.info("Employee created");
       res.status(200).json(employee);
     } else {

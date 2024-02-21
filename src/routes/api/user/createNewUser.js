@@ -27,7 +27,7 @@ const createNewUser = async (req, res) => {
         reportTo,
         active,
       });
-      logger.debug(userObj);
+      logger.debug("User created" + JSON.stringify(userObj));
       await createUser(userObj);
       //res.status(200).json({ token: idToken });
       res.status(200).json("User created");

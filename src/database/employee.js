@@ -79,6 +79,8 @@ class Employee {
 
 const createEmployee = async (accountInfo, managerId) => {
   try {
+    logger.debug("Inside createEmployee");
+    logger.debug(JSON.stringify(accountInfo));
     if (await getEmployee(accountInfo)) {
       throw new Error("Employee already exists");
     } else {
@@ -90,6 +92,7 @@ const createEmployee = async (accountInfo, managerId) => {
         category: -1,
       });
       const employee = new Employee({ id: accountInfo, reportTo: managerId });
+      logger.debug("Employee created: " + JSON.stringify(employee));
       return employee;
     }
   } catch (e) {
@@ -100,13 +103,16 @@ const createEmployee = async (accountInfo, managerId) => {
 
 const getEmployee = async (accountInfo) => {
   try {
+    logger.debug("Inside getEmployee" + accountInfo);
     const docRef = doc(db, "employees", accountInfo);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      logger.debug("Employee found");
       const id = docSnap.id;
       const data = docSnap.data();
-      const employee = new Employee({ id, ...data });
-      return employee.getDetailedEmployeeInfo();
+      return { id, ...data };
+      // const employee = new Employee({ id, ...data });
+      // return employee.getDetailedEmployeeInfo();
     } else {
       return null;
     }
