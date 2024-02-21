@@ -5,7 +5,17 @@ const authenticateJWT = require('../../../middleware/auth');
 const authenticateAccessLevel = require('../../../middleware/accessLevel');
 
 // POST /employee/register
-// router.post("/register", authenticateJWT, authenticateAccessLevel(["1"]), require("./createNewEmployee"));
+ router.post("/register", authenticateJWT, authenticateAccessLevel(["1"]), require("./createNewEmployee"));
+// Sample post body
+// {
+//     "email":"",
+//     "password":"",
+//     "firstName":"",
+//     "lastName":"",
+//     "accessLevel":0,
+//     "active":1,
+//     "managerId":""
+// }
 
 // GET /employee/:id
 //router.get('/:id', authenticateJWT, "./getEmployeeById");

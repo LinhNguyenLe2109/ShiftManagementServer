@@ -8,6 +8,9 @@ const authenticateAccessLevel = require("../../../middleware/accessLevel");
 router.get("/", authenticateJWT, require("./getUser"));
 // router.get("/", require("./getUser"));
 
+// GET /user/:userId
+router.get("/:userId", authenticateJWT, require("./getUserById"));
+
 // POST /user/login
 router.post("/login", require("./authenticateUser"));
 

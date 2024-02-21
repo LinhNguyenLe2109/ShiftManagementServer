@@ -36,8 +36,10 @@ class User {
     // -1 is undefined, 0 is false, 1 is true
     this.active = active ? active : -1;
     // -1 is undefined, 0 is employee, 1 is manager, 2 is admin
+    logger.debug("accessLevel inside User constructor: " + accessLevel);
     this.accessLevel =
-      accessLevel && typeof accessLevel == "number" ? accessLevel : -1;
+      accessLevel !== undefined && typeof accessLevel == "number" ? accessLevel : -1;
+      logger.debug("accessLevel after definition: " + this.accessLevel);
     this.accountInfo = verifyString(accountInfo) ? accountInfo : uuidv4();
     this.notificationList = Array.isArray(notificationList)
       ? notificationList
@@ -67,6 +69,7 @@ class User {
 const createUser = async (user) => {
   const userObj = new User(user);
   logger.info("createUser called");
+  logger.info("Inside createUser" + JSON.stringify(userObj));
   logger.info(userObj);
   try {
     const userId = userObj.getId();

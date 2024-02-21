@@ -25,6 +25,15 @@ router.put("/addCategory", authenticateJWT, authenticateAccessLevel(["1"]), requ
 //       "addCategory": "categoryId"
 //     }
 // }
+// PUT /manager/addEmployee
+router.put("/addEmployee", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateManagerEmployee"));
+// Example body:
+// {
+//     "managerId": "",
+//     "managerUpdatedData": {
+//       "addEmployee": "employeeId"
+//     }
+// }
 
 // DELETE /manager/:managerId
 router.delete("/:managerId", authenticateJWT, authenticateAccessLevel(["2"]), require("./deleteManager"));
