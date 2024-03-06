@@ -1,4 +1,3 @@
-const { admin } = require("../database/firebase.config");
 const { getUserInfo } = require("../database/users")
 const logger = require("../logger");
 //Usage: router.get("/route", authenticateJWT, authenticateAccessLevel(PARAM), require("./etc"));
