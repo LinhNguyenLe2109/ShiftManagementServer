@@ -171,7 +171,6 @@ const createManager = async (managerId) => {
     }
     const docRef = doc(db, "managers", managerId);
     await setDoc(docRef, {
-      id: managerId,
       employeeList: [],
       categoryList: [],
       unassignedShifts: [],
