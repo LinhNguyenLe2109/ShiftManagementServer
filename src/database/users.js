@@ -91,10 +91,10 @@ const createUser = async (user) => {
     if (await getUserInfo(userId)) {
       return false;
     }
-    const docRef = await setDoc(
-      doc(db, "users", userId),
-      userObj.getDataForDB()
-    );
+    // Save the document to database
+    await setDoc(doc(db, "users", userId), userObj.getDataForDB());
+
+    // Create sub collections based on access level
     if (userObj.accessLevel == 1) {
       await createManager(userObj.accountInfo);
     }
