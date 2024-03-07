@@ -1,3 +1,5 @@
+const logger = require("../logger");
+
 /**
  * A successful response looks like:
  *
@@ -7,10 +9,12 @@
  * }
  */
 
-module.exports.createSuccessResponse = function (data) {
+function createSuccessResponse(data) {
   logger.debug({ data }, "createSuccessResponse");
   return {
     status: "ok",
     ...data,
   };
-};
+}
+
+module.exports = createSuccessResponse;

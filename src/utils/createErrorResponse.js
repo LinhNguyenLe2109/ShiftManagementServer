@@ -1,3 +1,5 @@
+const logger = require("../logger");
+
 /**
  * An error response looks like:
  *
@@ -9,14 +11,15 @@
  *   }
  * }
  */
-module.exports.createErrorResponse = function (code, message) {
-    logger.debug({ code, message }, 'createErrorResponse');
-    return {
-      status: 'error',
-      error: {
-        code,
-        message,
-      },
-    };
+function createErrorResponse(code, message) {
+  logger.debug({ code, message }, "createErrorResponse");
+  return {
+    status: "error",
+    error: {
+      code,
+      message,
+    },
   };
-  
+}
+
+module.exports = createErrorResponse;
