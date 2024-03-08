@@ -85,7 +85,6 @@ const createEmployee = async (accountInfo, managerId) => {
       throw new Error("Employee already exists");
     } else {
       await setDoc(doc(db, "employees", accountInfo), {
-        id: accountInfo,
         reportTo: verifyString(managerId) ? managerId : "",
         scheduleTemplateId: uuidv4(),
         scheduleList: [],
