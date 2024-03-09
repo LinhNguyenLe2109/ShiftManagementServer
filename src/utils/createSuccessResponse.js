@@ -10,7 +10,7 @@ const logger = require("../logger");
  */
 
 function createSuccessResponse(data) {
-  logger.debug({ data }, "createSuccessResponse");
+  // logger.debug({ data }, "createSuccessResponse");
   return {
     status: "ok",
     ...data,

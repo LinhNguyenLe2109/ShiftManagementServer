@@ -176,7 +176,6 @@ const updateUserInfo = async (userId, user) => {
       userUpdatedData.email = userDataFromDb.email;
       userUpdatedData.accountInfo = userDataFromDb.accountInfo;
       userUpdatedData.notificationList = userDataFromDb.notificationList;
-      logger.info(userUpdatedData.getDataForDB());
       const docRef = await setDoc(
         doc(db, "users", userUpdatedData.getId()),
         userUpdatedData.getDataForDB(),
@@ -196,6 +195,8 @@ const updateUserInfo = async (userId, user) => {
 };
 
 // Delete a user profile
+// @param userId: string
+// @return boolean
 const deleteUser = async (userId) => {
   try {
     const user = getUserInfo(userId);
