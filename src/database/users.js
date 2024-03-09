@@ -196,6 +196,8 @@ const updateUserInfo = async (userId, user) => {
 };
 
 // Delete a user profile
+// @param userId: string
+// @return boolean
 const deleteUser = async (userId) => {
   try {
     const user = getUserInfo(userId);
