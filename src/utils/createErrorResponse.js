@@ -12,7 +12,7 @@ const logger = require("../logger");
  * }
  */
 function createErrorResponse(code, message) {
-  logger.debug({ code, message }, "createErrorResponse");
+  // logger.debug({ code, message }, "createErrorResponse");
   return {
     status: "error",
     error: {
