@@ -1,14 +1,14 @@
 const logger = require("../logger");
 const { createShiftSchedule, getShiftSchedulesByDate } = require("../database/shiftSchedule");
 //If we end up here (from createShift or updateShift), it means that a shift was uploaded without a parentSchedule.
-//The frontend should do this if there were no possible schedules.
+//The frontend should do this if there *were* no possible schedules.
 
 //This function should set parentSchedule to a valid schedule, making a new one if necessary.
 const findScheduleParent = async (shift) => {
     //Try to find existing schedule
     //employeeId, startTime, endTime should match, however endTime is going to be ignored :(
     const shiftWeekStart = getSundayOfWeek(shift.startTime);
-    var schedule = await getShiftSchedulesByDate(shift.employeeId, shiftWeekStart);
+    var schedule = await getShiftSchedulesByDate(shift.employeeId, addDays(shiftWeekStart,1)); //hack! add 1 day to shiftWeekStart to fix timezone issue
     if (!schedule) {
         logger.info("findScheduleParent was unable to find a valid schedule");
         schedule = await createShiftSchedule({
@@ -37,6 +37,11 @@ function getSundayOfWeek(d) {
         return noTime; // Set the date to the previous Sunday and return it
         //+ with no time component!
     }
+}
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }
 module.exports = { findScheduleParent };
   

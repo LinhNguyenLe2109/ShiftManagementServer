@@ -137,8 +137,6 @@ const getShiftSchedulesByDate = async (employeeId, date) => {
       shiftSchedulesRef,
       where("employeeId", "==", employeeId),
       where("startTime", "<=", Timestamp.fromDate(date)),
-      //SEVERE BUG! startTime is listed twice instead of endTime!
-      //You can't fix it either, firebase is limited to one-inequality filter per query!
       where(
         "startTime",
         ">=",
@@ -153,6 +151,8 @@ const getShiftSchedulesByDate = async (employeeId, date) => {
     shiftScheduleData.startTime = shiftScheduleData.startTime.toDate();
     shiftScheduleData.endTime = shiftScheduleData.endTime.toDate();
     const shiftScheduleId = shiftSchedulesSnap.docs[0].id;
+    logger.debug(shiftScheduleData);
+    logger.debug("Returning " + shiftScheduleId);
     return { id: shiftScheduleId, ...shiftScheduleData };
   } catch (e) {
     logger.error(e);
