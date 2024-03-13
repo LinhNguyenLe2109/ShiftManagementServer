@@ -137,6 +137,8 @@ const getShiftSchedulesByDate = async (employeeId, date) => {
       shiftSchedulesRef,
       where("employeeId", "==", employeeId),
       where("startTime", "<=", Timestamp.fromDate(date)),
+      //SEVERE BUG! startTime is listed twice instead of endTime!
+      //You can't fix it either, firebase is limited to one-inequality filter per query!
       where(
         "startTime",
         ">=",
