@@ -81,11 +81,12 @@ const createEmployee = async (accountInfo, managerId) => {
   try {
     logger.debug("Inside createEmployee");
     logger.debug(JSON.stringify(accountInfo));
+    logger.debug(JSON.stringify(managerId));
     if (await getEmployee(accountInfo)) {
       throw new Error("Employee already exists");
     } else {
       await setDoc(doc(db, "employees", accountInfo), {
-        reportTo: verifyString(managerId) ? managerId : "",
+        reportTo: managerId ? managerId : "",
         scheduleTemplateId: uuidv4(),
         scheduleList: [],
         category: -1,
@@ -129,9 +130,13 @@ const getEmployee = async (accountInfo) => {
 // @param employeeId: string
 // @param updatedEmployee: object
 const updateEmployee = async (employeeId, updatedEmployee) => {
-  const employee = getEmployee(employeeId);
+  const unformattedEmployee = await getEmployee(employeeId);
+  const employee = {...unformattedEmployee};
+  logger.debug('UnformattedEmployee: ' + JSON.stringify(unformattedEmployee));
+  logger.debug('Employee object: ' + JSON.stringify(unformattedEmployee));
+  logger.debug('New ReportTo: ' + JSON.stringify(updatedEmployee));
   if (updatedEmployee.hasOwnProperty("reportTo")) {
-    employee.setUpperManager(updatedEmployee.reportTo);
+    employee.reportTo = updatedEmployee.reportTo;
   }
   if (updatedEmployee.hasOwnProperty("scheduleTemplateId")) {
     employee.scheduleTemplateId = updatedEmployee.scheduleTemplateId;

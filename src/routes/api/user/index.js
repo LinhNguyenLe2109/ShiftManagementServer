@@ -31,6 +31,16 @@ router.post("/notification", authenticateJWT, require("./createNotification"));
 //     "content": ""
 // }
 
+// GET /user/notification/:notificationId
+router.get("/notification/:notificationId", authenticateJWT, require("./getNotificationById"));
+
+// DELETE /user/notification
+router.delete("/notification", authenticateJWT, require("./deleteNotification"));
+// Example body:
+// {
+//     "notificationId": ""
+// }
+
 // PUT /user
 router.put("/", authenticateJWT, require("./updateUser"));
 

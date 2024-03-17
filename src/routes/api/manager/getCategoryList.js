@@ -8,7 +8,7 @@ const getCategoryList = async (req, res) => {
     const managerId = req.params.managerId;
     logger.info("ManagerId: " + managerId);
     const manager = await getManager(managerId);
-    logger.debug("Categories: " + JSON.stringify(manager));
+    logger.debug("Categories: " + JSON.stringify(manager.categoryList));
     // const categoryList = await manager.categoryList.map(async (category) => {
     //   return await getCategory(category);
     // });

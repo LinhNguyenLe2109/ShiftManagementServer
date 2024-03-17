@@ -220,40 +220,15 @@ const getManager = async (managerId) => {
 const updateManager = async (managerId, managerUpdatedData) => {
   managerUpdatedData.id = managerId;
 
-  // Does not return a Manager class so the functions do not work
-  // (See getManagerReturn)
   const unformattedManager = await getManager(managerId);
-  // Convert categories to only ids
-  let updatedCategories = [];
-  if (
-    unformattedManager.categories &&
-    unformattedManager.categories.length > 0
-  ) {
-    updatedCategories = unformattedManager.categories.map((category) => {
-      return typeof category === "object" ? category.id : category;
-    });
-  }
-  // Convert employees to only ids
-  let updatedEmployees = [];
-  if (unformattedManager.employees && unformattedManager.employees.length > 0) {
-    updatedEmployees = unformattedManager.employees.map((employee) => {
-      return typeof employee === "object" ? employee.id : employee;
-    });
-  }
-
-  // Update the object with the new categories and employees arrays
-  const manager = {
-    ...unformattedManager,
-    categories: updatedCategories,
-    employees: updatedEmployees,
-  };
-  logger.debug("Fixed categories: " + JSON.stringify(manager));
+  logger.debug("getManager return: " + JSON.stringify(unformattedManager));
+  const manager = {...unformattedManager};
+  logger.debug("Object manager: " + JSON.stringify(manager));
 
   //const manager = new Manager(await getManager(managerId));
   // Update employee list
   if (managerUpdatedData.hasOwnProperty("addEmployee")) {
-    manager.employees.push(managerUpdatedData.addEmployee);
-    //manager.addEmployee(managerUpdatedData.addEmployee);
+    manager.employeeList.push(managerUpdatedData.addEmployee);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleEmployees")) {
     manager.addMultipleEmployees(managerUpdatedData.addMultipleEmployees);
@@ -267,8 +242,7 @@ const updateManager = async (managerId, managerUpdatedData) => {
 
   // Update category list
   if (managerUpdatedData.hasOwnProperty("addCategory")) {
-    manager.categories.push(managerUpdatedData.addCategory);
-    //manager.addCategory(managerUpdatedData.addCategory);
+    manager.categoryList.push(managerUpdatedData.addCategory);
   }
   if (managerUpdatedData.hasOwnProperty("addMultipleCategories")) {
     manager.addMultipleCategories(managerUpdatedData.addMultipleCategories);
@@ -303,8 +277,8 @@ const updateManager = async (managerId, managerUpdatedData) => {
     // Creates the same response as getDataForDB() but with updated values
     const updatedManager = {
       id: manager.id,
-      employeeList: manager.employees ? manager.employees : [],
-      categoryList: manager.categories ? manager.categories : [],
+      employeeList: manager.employeeList ? manager.employeeList : [],
+      categoryList: manager.categoryList ? manager.categoryList : [],
       unassignedShifts: manager.unassignedShifts
         ? manager.unassignedShifts
         : [],

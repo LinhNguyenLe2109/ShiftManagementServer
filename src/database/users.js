@@ -81,6 +81,7 @@ const createUser = async (user) => {
   logger.info("createUser called");
   logger.info("Inside createUser" + JSON.stringify(userObj));
   logger.info(userObj);
+  //logger.info("User:" + JSON.stringify(user));
   try {
     const userId = userObj.getId();
     // return false if accessLevel is not defined
@@ -99,7 +100,7 @@ const createUser = async (user) => {
       await createManager(userObj.accountInfo);
     }
     if (userObj.accessLevel == 0) {
-      await createEmployee(userObj.accountInfo, user.reportTo);
+      await createEmployee(userObj.accountInfo, managerId = user.reportTo);
     }
     return { success: true, user: await getUserInfo(userId) };
   } catch (e) {
