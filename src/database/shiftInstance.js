@@ -14,6 +14,7 @@ const { v4: uuidv4 } = require("uuid");
 const verifyString = require("../utils/verifyString");
 const verifyDate = require("../utils/verifyDate");
 const { Timestamp } = require("firebase/firestore");
+const { createEmptyReport } = require("./report");
 
 class ShiftInstance {
   // @param {string} id - The id of the shiftInstance
@@ -104,15 +105,23 @@ class ShiftInstance {
 // Create a shiftInstance
 // @param shiftInstance: object
 const createShiftInstance = async (shiftData) => {
-  // logger.info("Creating shiftInstance");
+  logger.info("Creating shiftInstance");
   // logger.info(shiftData);
   const shiftInstanceObj = new ShiftInstance(shiftData);
-  // logger.info(shiftInstanceObj);
+  logger.info(shiftInstanceObj);
   try {
     // check if the shiftInstanceObj already exists
     if (await getShiftInstance(shiftInstanceObj.id)) {
       throw new Error("ShiftInstance already exists");
     }
+    // create a report instance if it doesn't exist
+    if (shiftInstanceObj.report === "") {
+      // logger.info("Creating empty report");
+      const result = await createEmptyReport(shiftInstanceObj.employeeId);
+      // logger.info(result);
+      shiftInstanceObj.report = result.report.id;
+    }
+    logger.info("Skipping report creation");
     const shiftInstanceId = shiftInstanceObj.id;
     await setDoc(
       doc(db, "shiftInstances", shiftInstanceId),
@@ -154,11 +163,14 @@ const getShiftInstance = async (shiftInstanceId) => {
 // @param end: Date
 // @return shiftInstances: array
 const getShiftInstancesFromRange = async (employeeId, start, end) => {
+  logger.info("Getting shiftInstances from range");
   try {
     const docRef = collection(db, "shiftInstances");
+    logger.info("verifying employeeId");
     if (!verifyString(employeeId)) {
       throw new Error("Employee ID is required/invalid");
     }
+    logger.info("verifying date");
     if (!verifyDate(start)) {
       throw new Error("Invalid date format for start");
     }
@@ -176,6 +188,7 @@ const getShiftInstancesFromRange = async (employeeId, start, end) => {
     const querySnapShot = await getDocs(q);
     const shiftInstances = [];
     if (querySnapShot.empty) {
+      logger.info("No shiftInstances found");
       return [];
     }
     querySnapShot.forEach((doc) => {
@@ -270,43 +283,43 @@ const deleteShiftInstance = async (shiftInstanceId) => {
     }
     // TODO: remove report
 
-//Prevents parentSchedule, employeeId, report from being cleared. Simpler than retrieving them in some cases
-// const softUpdateShiftInstance = async (updatedShiftInstance) => {
-//   try {
-//     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
-//     const shiftInstanceObj = await getShiftInstance(updatedShiftInstance.id);
-//     // Verify the shiftInstanceObj
-//     updatedShiftInstance.startTime = updatedShiftInstance.startTime.toISOString();
-//     updatedShiftInstance.endTime = updatedShiftInstance.endTime.toISOString();
-//     if (!verifyString(updatedShiftInstance.name))
-//       updatedShiftInstance.name = shiftInstanceObj.name;
-//     if (!updatedShiftInstance.startTime)
-//       updatedShiftInstance.startTime = shiftInstanceObj.startTime;
-//     if (!updatedShiftInstance.endTime)
-//       updatedShiftInstance.endTime = shiftInstanceObj.endTime;
-//     if (!verifyString(updatedShiftInstance.parentSchedule))
-//       updatedShiftInstance.parentSchedule = shiftInstanceObj.parentSchedule;
-//     if (!verifyString(updatedShiftInstance.employeeId))
-//       updatedShiftInstance.employeeId = shiftInstanceObj.employeeId;
-//     if (!verifyString(updatedShiftInstance.report))
-//       updatedShiftInstance.report = shiftInstanceObj.report;
-//     updatedShiftInstance.createdBy = shiftInstanceObj.createdBy;
-//     await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
-//     logger.info(`ShiftInstance soft updated with ID: ${updatedShiftInstance.id}`);
-//     return updatedShiftInstance;
-//   } catch (e) {
-//     logger.error(`Error soft updating shiftInstance: ${e}`);
-//     throw e;
-//   }
-// };
+    //Prevents parentSchedule, employeeId, report from being cleared. Simpler than retrieving them in some cases
+    // const softUpdateShiftInstance = async (updatedShiftInstance) => {
+    //   try {
+    //     const docRef = doc(db, "shiftInstances", updatedShiftInstance.id);
+    //     const shiftInstanceObj = await getShiftInstance(updatedShiftInstance.id);
+    //     // Verify the shiftInstanceObj
+    //     updatedShiftInstance.startTime = updatedShiftInstance.startTime.toISOString();
+    //     updatedShiftInstance.endTime = updatedShiftInstance.endTime.toISOString();
+    //     if (!verifyString(updatedShiftInstance.name))
+    //       updatedShiftInstance.name = shiftInstanceObj.name;
+    //     if (!updatedShiftInstance.startTime)
+    //       updatedShiftInstance.startTime = shiftInstanceObj.startTime;
+    //     if (!updatedShiftInstance.endTime)
+    //       updatedShiftInstance.endTime = shiftInstanceObj.endTime;
+    //     if (!verifyString(updatedShiftInstance.parentSchedule))
+    //       updatedShiftInstance.parentSchedule = shiftInstanceObj.parentSchedule;
+    //     if (!verifyString(updatedShiftInstance.employeeId))
+    //       updatedShiftInstance.employeeId = shiftInstanceObj.employeeId;
+    //     if (!verifyString(updatedShiftInstance.report))
+    //       updatedShiftInstance.report = shiftInstanceObj.report;
+    //     updatedShiftInstance.createdBy = shiftInstanceObj.createdBy;
+    //     await setDoc(docRef, updatedShiftInstance.getDataForDB(), { merge: true });
+    //     logger.info(`ShiftInstance soft updated with ID: ${updatedShiftInstance.id}`);
+    //     return updatedShiftInstance;
+    //   } catch (e) {
+    //     logger.error(`Error soft updating shiftInstance: ${e}`);
+    //     throw e;
+    //   }
+    // };
 
-//Manager needs a deranged dependency injection D:<
-// const deleteShiftInstance = async (shiftInstanceId, Manager, updateManager) => {
-//   try {
-//     logger.info(`Deleting shiftInstance with ID: ${shiftInstanceId}`);
-//     for (const x of await getShiftParentManagers(shiftInstanceId, Manager)) {
-//       await updateManager(x.id, {removeUnassignedShift: shiftInstanceId})
-//     }
+    //Manager needs a deranged dependency injection D:<
+    // const deleteShiftInstance = async (shiftInstanceId, Manager, updateManager) => {
+    //   try {
+    //     logger.info(`Deleting shiftInstance with ID: ${shiftInstanceId}`);
+    //     for (const x of await getShiftParentManagers(shiftInstanceId, Manager)) {
+    //       await updateManager(x.id, {removeUnassignedShift: shiftInstanceId})
+    //     }
     const docRef = doc(db, "shiftInstances", shiftInstanceId);
     await deleteDoc(docRef);
     // logger.info(`shiftInstance deleted with ID: ${shiftInstanceId}`);
@@ -321,9 +334,7 @@ const deleteShiftInstance = async (shiftInstanceId) => {
 const getShiftParentManagers = async (id, Manager) => {
   try {
     const docRef = collection(db, "managers");
-    const q = query(docRef, 
-      where("unassignedShifts", "array-contains", id), 
-    );
+    const q = query(docRef, where("unassignedShifts", "array-contains", id));
     const querySnapShot = await getDocs(q);
     const managers = [];
     if (querySnapShot.empty) {
