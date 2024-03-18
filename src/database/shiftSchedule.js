@@ -151,6 +151,8 @@ const getShiftSchedulesByDate = async (employeeId, date) => {
     shiftScheduleData.startTime = shiftScheduleData.startTime.toDate();
     shiftScheduleData.endTime = shiftScheduleData.endTime.toDate();
     const shiftScheduleId = shiftSchedulesSnap.docs[0].id;
+    logger.debug(shiftScheduleData);
+    logger.debug("Returning " + shiftScheduleId);
     return { id: shiftScheduleId, ...shiftScheduleData };
   } catch (e) {
     logger.error(e);

@@ -212,13 +212,12 @@ const getShiftInstancesFromRange = async (employeeId, start, end) => {
 // @param updatedShiftInstance: object
 // @return updatedShiftInstance: shiftInstance object
 const updateShiftInstance = async (
-  shiftInstanceId,
   updatedShiftInstanceData
 ) => {
   try {
-    const docRef = doc(db, "shiftInstances", shiftInstanceId);
+    const docRef = doc(db, "shiftInstances", updatedShiftInstanceData.id);
     const shiftInstanceObj = new ShiftInstance(
-      await getShiftInstance(shiftInstanceId)
+      await getShiftInstance(updatedShiftInstanceData.id)
     );
     // check if the passing object has startTime
     if (
