@@ -1,12 +1,14 @@
 const { updateManager } = require("../../../database/manager");
+const { getUserInfo } = require("../../../database/users");
 const logger = require("../../../logger");
 
 const updateManagerEmployee = async (req, res) => {
   try {
-    logger.info("updateManagerCategory function called");    
-    const managerId = req.body.managerId;
+    logger.info("updateManagerEmployee function called");
+    const managerInfoId = (await getUserInfo(req.body.managerId)).accountInfo.id;
+    logger.debug("ManagerInfoId: " + managerInfoId);
     const employeeToAdd = req.body.managerUpdatedData.addEmployee;
-    const updatedManager = await updateManager(managerId, { addEmployee: employeeToAdd });
+    const updatedManager = await updateManager(managerInfoId, { addEmployee: employeeToAdd });
     if (updatedManager) {
       res.status(200).json(updatedManager);
     } else {

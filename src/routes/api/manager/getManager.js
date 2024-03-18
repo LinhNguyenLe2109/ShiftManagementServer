@@ -1,13 +1,15 @@
-const { getManager } = require("../../../database/manager");
+const { getUserInfo } = require("../../../database/users");
 const logger = require("../../../logger");
 
 const getManagerDetails = async (req, res) => {
   try {
     logger.info("getManager function called");
     const managerId = req.params.managerId;
-    const manager = await getManager(managerId);
+    const manager = await getUserInfo(managerId);
+    logger.debug("ManagerId: " + JSON.stringify(manager));
+    logger.debug("Manager: " + JSON.stringify(manager));
     if (manager) {
-      res.status(200).json(manager);
+      res.status(200).json(manager.accountInfo);
     } else {
       res.status(404).send("Manager not found");
     }
