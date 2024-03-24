@@ -134,7 +134,7 @@ const getScheduleShifts = async (shiftScheduleId) => {
     const shiftScheduleShiftIds = shiftScheduleSnap.data().shiftIdList;
     
     //https://stackoverflow.com/questions/63843805/how-to-get-data-for-a-list-of-ids-in-firestore
-    //what the actual fuck
+    //what the actual fuck 
     const promises = [];
     shiftScheduleShiftIds.forEach(id => promises.push(getShiftInstance(id)));
     return await Promise.all(promises);
