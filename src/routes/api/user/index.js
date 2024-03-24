@@ -15,7 +15,12 @@ router.get("/:userId", authenticateJWT, require("./getUserById"));
 router.post("/login", require("./authenticateUser"));
 
 // POST /user/register
-router.post("/register", authenticateJWT, authenticateAccessLevel(["1"]), require("./createNewUser"));
+router.post(
+  "/register",
+  authenticateJWT,
+  authenticateAccessLevel(["1", "2"]),
+  require("./createNewUser")
+);
 
 // POST /user/notification
 router.post("/notification", authenticateJWT, require("./createNotification"));
@@ -26,6 +31,25 @@ router.post("/notification", authenticateJWT, require("./createNotification"));
 //     "content": ""
 // }
 
+// GET /user/notification/:notificationId
+router.get("/notification/:notificationId", authenticateJWT, require("./getNotificationById"));
+
+// DELETE /user/notification
+router.delete("/notification", authenticateJWT, require("./deleteNotification"));
+// Example body:
+// {
+//     "notificationId": ""
+// }
+
 // PUT /user
 router.put("/", authenticateJWT, require("./updateUser"));
+
+// DELETE /user/:id
+router.delete(
+  "/:id",
+  authenticateJWT,
+  authenticateAccessLevel(["1", "2"]),
+  require("./deleteUser")
+);
+
 module.exports = router;

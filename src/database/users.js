@@ -4,7 +4,6 @@ const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { removeUserFromAuthDb } = require("../database/authentication");
 const { v4: uuidv4 } = require("uuid");
-const { deleteAdmin, createAdmin, getAdmin } = require("../database/admin");
 const {
   deleteManager,
   createManager,
@@ -42,7 +41,16 @@ class User {
         ? accessLevel
         : -1;
     logger.debug("accessLevel after definition: " + this.accessLevel);
-    this.accountInfo = verifyString(accountInfo) ? accountInfo : uuidv4();
+    // conditional Account info, it will be -1 if the access level is admin
+    if (verifyString(accountInfo)) {
+      this.accountInfo = accountInfo;
+    } else {
+      if (this.accessLevel == 2) {
+        this.accountInfo = "-1";
+      } else {
+        this.accountInfo = uuidv4();
+      }
+    }
     this.notificationList = Array.isArray(notificationList)
       ? notificationList
       : [];
@@ -73,6 +81,7 @@ const createUser = async (user) => {
   logger.info("createUser called");
   logger.info("Inside createUser" + JSON.stringify(userObj));
   logger.info(userObj);
+  //logger.info("User:" + JSON.stringify(user));
   try {
     const userId = userObj.getId();
     // return false if accessLevel is not defined
@@ -83,18 +92,15 @@ const createUser = async (user) => {
     if (await getUserInfo(userId)) {
       return false;
     }
-    const docRef = await setDoc(
-      doc(db, "users", userId),
-      userObj.getDataForDB()
-    );
-    if (userObj.accessLevel == 2) {
-      await createAdmin(userObj.accountInfo);
-    }
+    // Save the document to database
+    await setDoc(doc(db, "users", userId), userObj.getDataForDB());
+
+    // Create sub collections based on access level
     if (userObj.accessLevel == 1) {
       await createManager(userObj.accountInfo);
     }
     if (userObj.accessLevel == 0) {
-      await createEmployee(userObj.accountInfo, user.reportTo);
+      await createEmployee(userObj.accountInfo, managerId = user.reportTo);
     }
     return { success: true, user: await getUserInfo(userId) };
   } catch (e) {
@@ -118,7 +124,7 @@ const getUserInfo = async (userId) => {
       const data = docSnap.data();
       data.createdOn = data.createdOn.toDate();
       if (data.accessLevel == 2) {
-        data.accountInfo = await getAdmin(data.accountInfo);
+        data.accountInfo = null;
       }
       if (data.accessLevel == 1) {
         data.accountInfo = await getManager(data.accountInfo);
@@ -171,7 +177,6 @@ const updateUserInfo = async (userId, user) => {
       userUpdatedData.email = userDataFromDb.email;
       userUpdatedData.accountInfo = userDataFromDb.accountInfo;
       userUpdatedData.notificationList = userDataFromDb.notificationList;
-      logger.info(userUpdatedData.getDataForDB());
       const docRef = await setDoc(
         doc(db, "users", userUpdatedData.getId()),
         userUpdatedData.getDataForDB(),
@@ -191,13 +196,12 @@ const updateUserInfo = async (userId, user) => {
 };
 
 // Delete a user profile
+// @param userId: string
+// @return boolean
 const deleteUser = async (userId) => {
   try {
     const user = getUserInfo(userId);
     let successfulDeleteCheck = true;
-    if (user.accessLevel == 2) {
-      successfulDeleteCheck = await deleteAdmin(userId);
-    }
     if (user.accessLevel == 1) {
       successfulDeleteCheck = await deleteManager(userId);
     }
