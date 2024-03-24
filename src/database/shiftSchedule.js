@@ -131,13 +131,14 @@ const getScheduleShifts = async (shiftScheduleId) => {
     const shiftScheduleSnap = await getDoc(shiftScheduleRef);
     if (!shiftScheduleSnap.exists())
       return null;
-
     const shiftScheduleShiftIds = shiftScheduleSnap.data().shiftIdList;
-    var res = [];
-    for (const id of shiftScheduleShiftIds)
-      res.push(getShiftInstance(id));
-
-    return { res };
+    
+    //https://stackoverflow.com/questions/63843805/how-to-get-data-for-a-list-of-ids-in-firestore
+    //what the actual fuck
+    const promises = [];
+    shiftScheduleShiftIds.forEach(id => promises.push(getShiftInstance(id)));
+    return await Promise.all(promises);
+    //I hate nosql??????
 
   } catch (e) {
     logger.error(e);

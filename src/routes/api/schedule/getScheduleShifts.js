@@ -3,18 +3,11 @@ const {
 } = require("../../../database/shiftSchedule");
 const logger = require("../../../logger");
 
-const getScheduleShifts = async (req, res) => {
-  //req.body
+const getScheduleShiftsRoute = async (req, res) => {
   try {
     logger.info("getScheduleShifts called");
-    logger.debug(req.body);
-    if (!req.scheduleId) {
-      return res
-        .status(400)
-        .send("Missing scheduleId");
-    }
     const shiftInstances = await getScheduleShifts(
-      req.body.scheduleId
+      req.params.scheduleId
     );
     logger.debug(shiftInstances);
     return res.status(200).json(shiftInstances);
@@ -24,4 +17,4 @@ const getScheduleShifts = async (req, res) => {
   }
 };
 
-module.exports = getShifts;
+module.exports = getScheduleShiftsRoute;
