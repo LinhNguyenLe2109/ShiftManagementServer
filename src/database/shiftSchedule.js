@@ -121,6 +121,30 @@ const getShiftSchedule = async (shiftScheduleId) => {
   }
 };
 
+
+// getScheduleShifts gets an array of shift instances contained in schedule
+// @param shiftScheduleId: string
+// @returns ShiftInstance array
+const getScheduleShifts = async (shiftScheduleId) => {
+  try {
+    const shiftScheduleRef = doc(db, "shiftSchedules", shiftScheduleId);
+    const shiftScheduleSnap = await getDoc(shiftScheduleRef);
+    if (!shiftScheduleSnap.exists())
+      return null;
+
+    const shiftScheduleShiftIds = shiftScheduleSnap.data().shiftIdList;
+    var res = [];
+    for (const id of shiftScheduleShiftIds)
+      res.push(getShiftInstance(id));
+
+    return { res };
+
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
+
 // getShiftScheduleByDate gets a shift schedule by date (startDate >= date <= endDate)
 // @param employeeId: string
 // @param date: Date
@@ -273,5 +297,6 @@ module.exports = {
   getAllShiftSchedules,
   updateShiftSchedule,
   deleteShiftSchedule,
+  getScheduleShifts,
   ShiftSchedule,
 };
