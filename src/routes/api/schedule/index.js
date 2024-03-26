@@ -4,6 +4,7 @@ const logger = require("../../../logger");
 const authenticateJWT = require("../../../middleware/auth");
 
 router.get("/get/:scheduleId", authenticateJWT, require("./getSchedule"));
+router.get("/getScheduleShifts/:scheduleId", authenticateJWT, require("./getScheduleShifts"));
 router.get(
   "/getAll/:employeeId",
   authenticateJWT,

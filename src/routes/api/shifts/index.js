@@ -7,6 +7,7 @@ const authenticateAccessLevel = require("../../../middleware/accessLevel");
 router.get("/get/:shiftId", authenticateJWT, require("./getShift"));
 router.post("/getRange", authenticateJWT, require("./getShifts"));
 router.post("/create", authenticateJWT, require("./createShift"));
+router.post("/createTemplated", authenticateJWT, require("./createShiftTemplated"));
 router.delete("/delete/:shiftId", authenticateJWT, require("./deleteShift"));
 router.put("/update", authenticateJWT, require("./updateShift"));
 router.post("/getUnassignedShifts", authenticateJWT, authenticateAccessLevel(["1"]), require("./getUnassignedShifts"));
