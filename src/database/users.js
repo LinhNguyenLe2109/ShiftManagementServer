@@ -90,7 +90,7 @@ const createUser = async (user) => {
     }
     // Check if user already exists
     if (await getUserInfo(userId)) {
-      return false;
+      return { success: false, message: "User already exists" };
     }
     // Save the document to database
     await setDoc(doc(db, "users", userId), userObj.getDataForDB());
