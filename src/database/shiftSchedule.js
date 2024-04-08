@@ -121,6 +121,31 @@ const getShiftSchedule = async (shiftScheduleId) => {
   }
 };
 
+
+// getScheduleShifts gets an array of shift instances contained in schedule
+// @param shiftScheduleId: string
+// @returns ShiftInstance array
+const getScheduleShifts = async (shiftScheduleId) => {
+  try {
+    const shiftScheduleRef = doc(db, "shiftSchedules", shiftScheduleId);
+    const shiftScheduleSnap = await getDoc(shiftScheduleRef);
+    if (!shiftScheduleSnap.exists())
+      return null;
+    const shiftScheduleShiftIds = shiftScheduleSnap.data().shiftIdList;
+    
+    //https://stackoverflow.com/questions/63843805/how-to-get-data-for-a-list-of-ids-in-firestore
+    //what the actual fuck 
+    const promises = [];
+    shiftScheduleShiftIds.forEach(id => promises.push(getShiftInstance(id)));
+    return await Promise.all(promises);
+    //I hate nosql??????
+
+  } catch (e) {
+    logger.error(e);
+    throw e;
+  }
+};
+
 // getShiftScheduleByDate gets a shift schedule by date (startDate >= date <= endDate)
 // @param employeeId: string
 // @param date: Date
@@ -273,5 +298,6 @@ module.exports = {
   getAllShiftSchedules,
   updateShiftSchedule,
   deleteShiftSchedule,
+  getScheduleShifts,
   ShiftSchedule,
 };

@@ -6,6 +6,7 @@ const updateManagerEmployee = async (req, res) => {
   try {
     logger.info("updateManagerEmployee function called");
     const managerInfoId = (await getUserInfo(req.body.managerId)).accountInfo.id;
+    logger.debug("ManagerInfoId: " + managerInfoId);
     const employeeToAdd = req.body.managerUpdatedData.addEmployee;
     const updatedManager = await updateManager(managerInfoId, { addEmployee: employeeToAdd });
     if (updatedManager) {

@@ -39,7 +39,7 @@ describe("createUser", () => {
     });
     userId = user.id;
     const result = await createUser(user);
-    expect(result).toBe(true);
+    expect(result.success).toBe(true);
   });
 
   test("create user that already exists return false", async () => {
@@ -65,6 +65,6 @@ describe("createUser", () => {
     userId = user.id;
     await createUser(user);
     const result = await createUser(user);
-    expect(result).toBe(false);
+    expect(result.success).toBe(false);
   });
 });
