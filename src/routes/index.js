@@ -5,6 +5,7 @@ router.use("/user", require("./api/user"));
 router.use("/shifts", require("./api/shifts"));
 
 router.use("/schedule", require("./api/schedule"));
+router.use("/scheduleTemplate", require("./api/scheduleTemplate"));
 
 router.use("/categories", require("./api/categories"));
 router.use("/employee", require("./api/employee"));
