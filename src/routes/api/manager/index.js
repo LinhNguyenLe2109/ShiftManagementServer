@@ -35,6 +35,10 @@ router.put("/addEmployee", authenticateJWT, authenticateAccessLevel(["1"]), requ
 //     }
 // }
 
+// PUT /manager/:managerId
+router.put("/:managerId", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateManagerInfo"));
+
+
 // DELETE /manager/:managerId
 router.delete("/:managerId", authenticateJWT, authenticateAccessLevel(["2"]), require("./deleteManager"));
 

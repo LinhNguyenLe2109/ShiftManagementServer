@@ -45,7 +45,7 @@ class User {
     if (verifyString(accountInfo)) {
       this.accountInfo = accountInfo;
     } else {
-      if (this.accessLevel == 2) {
+      if (this.accessLevel == 2 || this.accessLevel == -1) {
         this.accountInfo = "-1";
       } else {
         this.accountInfo = uuidv4();
@@ -80,7 +80,7 @@ const createUser = async (user) => {
   const userObj = new User(user);
   logger.info("createUser called");
   logger.info("Inside createUser" + JSON.stringify(userObj));
-  logger.info(userObj);
+  // logger.info(userObj);
   //logger.info("User:" + JSON.stringify(user));
   try {
     const userId = userObj.getId();
@@ -100,8 +100,9 @@ const createUser = async (user) => {
       await createManager(userObj.accountInfo);
     }
     if (userObj.accessLevel == 0) {
-      await createEmployee(userObj.accountInfo, managerId = user.reportTo);
+      await createEmployee(userObj.accountInfo, (managerId = user.reportTo));
     }
+    logger.info(`User created successfully: ${userId}`);
     return { success: true, user: await getUserInfo(userId) };
   } catch (e) {
     logger.error(`Error creating user: ${e}`);
@@ -115,15 +116,15 @@ const createUser = async (user) => {
 const getUserInfo = async (userId) => {
   logger.info("getUserInfo called");
   try {
-    logger.debug("User id:" + userId);
+    // logger.debug("User id:" + userId);
     const docRef = doc(db, "users", userId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      logger.info(docSnap.data());
+      // logger.info(docSnap.data());
       const id = docSnap.id;
       const data = docSnap.data();
       data.createdOn = data.createdOn.toDate();
-      if (data.accessLevel == 2) {
+      if (data.accessLevel == 2 || data.accessLevel == -1) {
         data.accountInfo = null;
       }
       if (data.accessLevel == 1) {
@@ -132,6 +133,8 @@ const getUserInfo = async (userId) => {
       if (data.accessLevel == 0) {
         data.accountInfo = await getEmployee(data.accountInfo);
       }
+      // logger.info(`User found: ${id}`);
+      logger.info(data);
       return { id, ...data };
     } else {
       logger.error("No such document!");
