@@ -18,7 +18,7 @@ const authenticateAccessLevel = require('../../../middleware/accessLevel');
 // }
 
 // PUT /employee/:id
-router.put("/:id", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateReportTo"));
+// router.put("/:id", authenticateJWT, authenticateAccessLevel(["1"]), require("./updateReportTo"));
 // Example body:
 // {
 //     "managerId": "",
@@ -28,6 +28,6 @@ router.put("/:id", authenticateJWT, authenticateAccessLevel(["1"]), require("./u
 //router.get('/:id', authenticateJWT, "./getEmployeeById");
 
 // PUT /employee/:id
-//router.put('/update/:id', authenticateJWT, "./updateEmployeeById");
+router.put('/:id', authenticateJWT, authenticateAccessLevel(["1"]), require('./updateEmployeeById'));
 
 module.exports = router;

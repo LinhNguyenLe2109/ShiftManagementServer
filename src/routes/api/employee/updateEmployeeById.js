@@ -6,6 +6,7 @@ const updateEmployeeById = async (req, res) => {
     logger.info('updateEmployeeById called');
     const { id } = req.params;
     const updatedEmployee = req.body;
+    console.log("body: ", req.body)
     const employee = await updateEmployee(id, updatedEmployee);
     if (employee) {
       res.status(200).json(employee);

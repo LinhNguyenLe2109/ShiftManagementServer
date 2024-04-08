@@ -10,6 +10,7 @@ const logger = require("../logger");
 const verifyString = require("../utils/verifyString");
 const { getUserInfo } = require("../database/users");
 const { v4: uuidv4 } = require("uuid");
+const verifyNumber = require("../utils/verifyNumber");
 
 // Receive id from User class
 // Generate schedule template id for scheduleTemplate class
@@ -21,7 +22,9 @@ class Employee {
       ? scheduleTemplateId
       : uuidv4();
     this.scheduleList = scheduleList ? scheduleList : [];
-    this.category = category && typeof category == "number" ? category : -1;
+    this.category =
+      verifyNumber(category) && typeof category == "number" ? category : -1;
+    // logger.debug(this.category);
   }
 
   getScheduleTemplate = async () => {
@@ -103,14 +106,15 @@ const createEmployee = async (accountInfo, managerId) => {
 
 const getEmployee = async (accountInfo) => {
   try {
-    logger.debug("Inside getEmployee" + accountInfo);
+    // logger.debug("Inside getEmployee " + accountInfo);
     const docRef = doc(db, "employees", accountInfo);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       logger.debug("Employee found");
       const id = docSnap.id;
       const data = docSnap.data();
-      return { id, ...data };
+      // logger.debug("Employee data: " + JSON.stringify(data));
+      return new Employee({ id, ...data });
       // const employee = new Employee({ id, ...data });
       // return employee.getDetailedEmployeeInfo();
     } else {
@@ -127,39 +131,40 @@ const getEmployee = async (accountInfo) => {
 // To add multiple schedules, use addMultipleSchedules key
 // To remove a schedule, use removeSchedule key
 // To remove multiple schedules, use removeMultipleSchedules key
+// To update the reportTo, use reportTo key
+// To update the scheduleTemplateId, use scheduleTemplateId key
+// To update the category, use category key
 // @param employeeId: string
 // @param updatedEmployee: object
-const updateEmployee = async (employeeId, updatedEmployee) => {
-  const unformattedEmployee = await getEmployee(employeeId);
-  const employee = {...unformattedEmployee};
-  logger.debug('UnformattedEmployee: ' + JSON.stringify(unformattedEmployee));
-  logger.debug('Employee object: ' + JSON.stringify(unformattedEmployee));
-  logger.debug('New ReportTo: ' + JSON.stringify(updatedEmployee));
-  if (updatedEmployee.hasOwnProperty("reportTo")) {
-    employee.reportTo = updatedEmployee.reportTo;
+const updateEmployee = async (employeeId, updatedData) => {
+  const employee = await getEmployee(employeeId);
+  // logger.debug("Employee: " + JSON.stringify(employee));
+  // logger.debug('Updated Data: ' + JSON.stringify(updatedData));
+  if (updatedData.hasOwnProperty("reportTo")) {
+    employee.reportTo = updatedData.reportTo;
   }
-  if (updatedEmployee.hasOwnProperty("scheduleTemplateId")) {
-    employee.scheduleTemplateId = updatedEmployee.scheduleTemplateId;
+  if (updatedData.hasOwnProperty("scheduleTemplateId")) {
+    employee.scheduleTemplateId = updatedData.scheduleTemplateId;
   }
-  if (updatedEmployee.hasOwnProperty("category")) {
-    employee.setCategory(updatedEmployee.category);
+  if (updatedData.hasOwnProperty("category")) {
+    employee.setCategory(updatedData.category);
   }
-  if (updatedEmployee.hasOwnProperty("addSchedule")) {
-    employee.addSchedule(updatedEmployee.addSchedule);
+  if (updatedData.hasOwnProperty("addSchedule")) {
+    employee.addSchedule(updatedData.addSchedule);
   }
-  if (updatedEmployee.hasOwnProperty("addMultipleSchedules")) {
-    employee.addMultipleSchedules(updatedEmployee.addSchedule);
+  if (updatedData.hasOwnProperty("addMultipleSchedules")) {
+    employee.addMultipleSchedules(updatedData.addSchedule);
   }
-  if (updatedEmployee.hasOwnProperty("removeSchedule")) {
-    const index = employee.scheduleList.indexOf(updatedEmployee.removeSchedule);
+  if (updatedData.hasOwnProperty("removeSchedule")) {
+    const index = employee.scheduleList.indexOf(updatedData.removeSchedule);
     if (index > -1) {
       employee.scheduleList.splice(index, 1);
     }
   }
-  if (updatedEmployee.hasOwnProperty("removeMultipleSchedules")) {
-    for (let i = 0; i < updatedEmployee.removeMultipleSchedules.length; i++) {
+  if (updatedData.hasOwnProperty("removeMultipleSchedules")) {
+    for (let i = 0; i < updatedData.removeMultipleSchedules.length; i++) {
       const index = employee.scheduleList.indexOf(
-        updatedEmployee.removeMultipleSchedules[i]
+        updatedData.removeMultipleSchedules[i]
       );
       if (index > -1) {
         employee.scheduleList.splice(index, 1);
@@ -167,7 +172,15 @@ const updateEmployee = async (employeeId, updatedEmployee) => {
     }
   }
   try {
-    await setDoc(doc(db, "employees", employeeId), employee);
+    const updatedEmployee = {
+      reportTo: employee.reportTo,
+      scheduleTemplateId: employee.scheduleTemplateId,
+      scheduleList: employee.scheduleList,
+      category: employee.category,
+    };
+    logger.info(`Employee Id: ${employeeId}`);
+    logger.info(`Updated employee: ${JSON.stringify(updatedEmployee)}`);
+    await setDoc(doc(db, "employees", employeeId), updatedEmployee);
     return getEmployee(employeeId);
   } catch (e) {
     logger.error(`Error updating employee: ${e}`);
@@ -177,6 +190,7 @@ const updateEmployee = async (employeeId, updatedEmployee) => {
 
 // Delete an employee
 // @param employeeId: string
+// @return boolean
 const deleteEmployee = async (employeeId) => {
   try {
     const employee = getEmployee(employeeId);
