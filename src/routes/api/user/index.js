@@ -26,6 +26,20 @@ router.post("/notification", authenticateJWT, require("./createNotification"));
 //     "content": ""
 // }
 
+router.post("/notification/remove", authenticateJWT, require("./removeNotification"));
+// Example body:
+// {
+//     "userId": "",
+//     "notificationId": ""
+// }
+
+router.post("/notification/add", authenticateJWT, require("./addNotificationToList"));
+// Example body:
+// {
+//     "userId": "",
+//     "notificationId": ""
+// }
+
 // PUT /user
 router.put("/", authenticateJWT, require("./updateUser"));
 module.exports = router;
