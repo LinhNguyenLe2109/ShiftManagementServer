@@ -232,10 +232,65 @@ const deleteUser = async (userId) => {
   }
 };
 
+const removeNotificationFromUser = async (userId, notificationId) => {
+  try {
+    const user = await getUserInfo(userId);
+    if (!user) {
+      logger.error(`User not found with ID: ${userId}`);
+      return false;
+    }
+    
+    user.notificationList = user.notificationList.filter(id => id !== notificationId);
+    logger.info(`Updated notificationList: ${JSON.stringify(user.notificationList)}`)
+    const docRef = doc(db, "users", userId);
+    await setDoc(docRef, { notificationList: user.notificationList }, { merge: true });
+
+    logger.info(`Notification ${notificationId} removed from user ${userId}`);
+    return true;
+  } catch (e) {
+    logger.error(`Error removing notification from user: ${e}`);
+    return false;
+  }
+};
+
+const addNotificationToUser = async (userId, notificationId) => {
+  try {
+    const user = await getUserInfo(userId);
+    if (!user) {
+      logger.error(`User not found with ID: ${userId}`);
+      return false;
+    }
+
+    // Check if the notificationId already exists in the notificationList
+    if (!user.notificationList.includes(notificationId)) {
+      // Add the notificationId to the notificationList
+      user.notificationList.push(notificationId);
+      logger.info(`Updated notificationList: ${JSON.stringify(user.notificationList)}`);
+
+      // Update the user document in Firestore with the new notificationList
+      const docRef = doc(db, "users", userId);
+      await setDoc(docRef, { notificationList: user.notificationList }, { merge: true });
+
+      logger.info(`Notification ${notificationId} added to user ${userId}`);
+      return true;
+    } else {
+      logger.info(`Notification ${notificationId} already exists in user ${userId}`);
+      return false;
+    }
+  } catch (e) {
+    logger.error(`Error adding notification to user: ${e}`);
+    return false;
+  }
+};
+
+
+
 module.exports = {
   getUserInfo,
   createUser,
   updateUserInfo,
   deleteUser,
+  removeNotificationFromUser,
+  addNotificationToUser,
   User,
 };

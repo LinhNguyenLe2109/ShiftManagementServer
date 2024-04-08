@@ -31,6 +31,20 @@ router.post("/notification", authenticateJWT, require("./createNotification"));
 //     "content": ""
 // }
 
+router.post("/notification/remove", authenticateJWT, require("./removeNotification"));
+// Example body:
+// {
+//     "userId": "",
+//     "notificationId": ""
+// }
+
+router.post("/notification/add", authenticateJWT, require("./addNotificationToList"));
+// Example body:
+// {
+//     "userId": "",
+//     "notificationId": ""
+// }
+
 // GET /user/notification/:notificationId
 router.get("/notification/:notificationId", authenticateJWT, require("./getNotificationById"));
 
